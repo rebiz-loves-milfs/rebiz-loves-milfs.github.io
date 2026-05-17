@@ -1,0 +1,852 @@
+---
+import { PageHeader } from "@components/features/page-header";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { guestbookConfig } from "../config";
+import I18nKey from "../i18n/i18nKey";
+import { i18n } from "../i18n/translation";
+
+if (!guestbookConfig.enable) {
+	return Astro.redirect("/404/");
+}
+
+const SUPABASE_URL = guestbookConfig.supabaseUrl;
+const SUPABASE_KEY = guestbookConfig.supabaseKey;
+const MAX_NAME = guestbookConfig.maxNameLength ?? 50;
+const MAX_MSG = guestbookConfig.maxMessageLength ?? 500;
+---
+
+<MainGridLayout
+	title={i18n(I18nKey.guestbook)}
+	description={i18n(I18nKey.guestbookSubtitle)}
+>
+	<div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative">
+		<div class="card-base z-10 px-6 py-6 md:px-9 relative w-full">
+			<PageHeader
+				title={i18n(I18nKey.guestbook)}
+				subtitle={i18n(I18nKey.guestbookSubtitle)}
+			/>
+
+			<!-- Submission form -->
+			<div class="gb-form-card mt-6">
+				<div class="gb-form-header">
+					<span class="gb-form-icon">✍️</span>
+					<h3 class="gb-form-title">{i18n(I18nKey.guestbookLeaveMessage)}</h3>
+				</div>
+				<form id="gb-form" class="gb-form" novalidate>
+					<div class="gb-field-row">
+						<div class="gb-field gb-field--name">
+							<label for="gb-name">{i18n(I18nKey.guestbookName)}</label>
+							<div class="gb-input-wrap">
+								<input
+									id="gb-name"
+									type="text"
+									placeholder="Anonymous"
+									maxlength={MAX_NAME}
+									autocomplete="off"
+									spellcheck="false"
+								/>
+								<span class="gb-counter" id="name-counter">0/{MAX_NAME}</span>
+							</div>
+						</div>
+					</div>
+					<div class="gb-field">
+						<label for="gb-message">{i18n(I18nKey.guestbookMessage)}</label>
+						<div class="gb-input-wrap">
+							<textarea
+								id="gb-message"
+								placeholder="Say something nice... ✨"
+								maxlength={MAX_MSG}
+								rows="3"
+							></textarea>
+							<span class="gb-counter" id="msg-counter">0/{MAX_MSG}</span>
+						</div>
+					</div>
+					<div class="gb-form-footer">
+						<span id="gb-status" class="gb-status" aria-live="polite"></span>
+						<button type="submit" id="gb-submit" class="gb-btn-primary">
+							<span id="gb-btn-text">{i18n(I18nKey.guestbookSubmit)}</span>
+							<span class="gb-btn-arrow">→</span>
+						</button>
+					</div>
+				</form>
+			</div>
+
+			<!-- Message wall -->
+			<div class="mt-8">
+				<div id="gb-count" class="gb-count" style="display:none"></div>
+				<div id="gb-loading" class="gb-skeletons">
+					<div class="gb-skeleton-card">
+						<div class="gb-sk gb-sk-avatar"></div>
+						<div class="gb-sk-body">
+							<div class="gb-sk gb-sk-line gb-sk-short"></div>
+							<div class="gb-sk gb-sk-line"></div>
+							<div class="gb-sk gb-sk-line gb-sk-medium"></div>
+						</div>
+					</div>
+					<div class="gb-skeleton-card">
+						<div class="gb-sk gb-sk-avatar"></div>
+						<div class="gb-sk-body">
+							<div class="gb-sk gb-sk-line gb-sk-short"></div>
+							<div class="gb-sk gb-sk-line gb-sk-medium"></div>
+						</div>
+					</div>
+				</div>
+				<div id="gb-messages" class="gb-messages" style="display:none"></div>
+				<div id="gb-empty" class="gb-empty" style="display:none">
+					<span class="gb-empty-icon">📭</span>
+					<p>{i18n(I18nKey.guestbookEmpty)}</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</MainGridLayout>
+
+<style is:global>
+/* ─── Form card ─── */
+.gb-form-card {
+	background: color-mix(in srgb, var(--card-bg, white) 97%, transparent);
+	border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+	border-radius: 16px;
+	padding: 1.5rem;
+}
+
+.gb-form-header {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+}
+
+.gb-form-icon {
+	font-size: 1.25rem;
+}
+
+.gb-form-title {
+	font-size: 1rem;
+	font-weight: 600;
+	margin: 0;
+	opacity: 0.85;
+}
+
+.gb-form {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+}
+
+.gb-field-row {
+	display: flex;
+	gap: 0.75rem;
+}
+
+.gb-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	width: 100%;
+}
+
+.gb-field--name {
+	max-width: 280px;
+}
+
+.gb-field label {
+	font-size: 0.78rem;
+	font-weight: 500;
+	opacity: 0.6;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.gb-input-wrap {
+	position: relative;
+}
+
+.gb-input-wrap input,
+.gb-input-wrap textarea {
+	width: 100%;
+	background: color-mix(in srgb, currentColor 5%, transparent);
+	border: 1.5px solid color-mix(in srgb, currentColor 12%, transparent);
+	border-radius: 10px;
+	padding: 0.6rem 0.875rem;
+	font-size: 0.9rem;
+	font-family: inherit;
+	color: inherit;
+	transition: border-color 0.2s, box-shadow 0.2s;
+	resize: none;
+	outline: none;
+	box-sizing: border-box;
+}
+
+.gb-input-wrap textarea {
+	padding-bottom: 1.5rem;
+}
+
+.gb-input-wrap input:focus,
+.gb-input-wrap textarea:focus {
+	border-color: oklch(from hsl(var(--hue, 30) 80% 55%) l c h);
+	box-shadow: 0 0 0 3px color-mix(in srgb, hsl(var(--hue, 30) 80% 55%) 15%, transparent);
+}
+
+.gb-counter {
+	position: absolute;
+	bottom: 6px;
+	right: 10px;
+	font-size: 0.7rem;
+	opacity: 0.35;
+	pointer-events: none;
+	font-variant-numeric: tabular-nums;
+}
+
+.gb-form-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.gb-status {
+	font-size: 0.85rem;
+	flex: 1;
+}
+
+.gb-status--success { color: oklch(65% 0.2 145); }
+.gb-status--error   { color: oklch(60% 0.22 25); }
+.gb-status--rate    { color: oklch(65% 0.15 70); }
+
+.gb-btn-primary {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.55rem 1.25rem;
+	background: hsl(var(--hue, 30) 75% 55%);
+	color: white;
+	border: none;
+	border-radius: 10px;
+	font-size: 0.88rem;
+	font-weight: 600;
+	font-family: inherit;
+	cursor: pointer;
+	transition: background 0.2s, transform 0.15s, opacity 0.2s;
+	white-space: nowrap;
+}
+
+.gb-btn-primary:hover { background: hsl(var(--hue, 30) 75% 48%); }
+.gb-btn-primary:active { transform: scale(0.97); }
+.gb-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.gb-btn-arrow {
+	transition: transform 0.2s;
+}
+.gb-btn-primary:not(:disabled):hover .gb-btn-arrow {
+	transform: translateX(3px);
+}
+
+/* ─── Count ─── */
+.gb-count {
+	font-size: 0.8rem;
+	opacity: 0.45;
+	margin-bottom: 0.75rem;
+	font-weight: 500;
+}
+
+/* ─── Skeletons ─── */
+.gb-skeletons {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.gb-skeleton-card {
+	display: flex;
+	gap: 0.875rem;
+	align-items: flex-start;
+}
+
+.gb-sk {
+	background: color-mix(in srgb, currentColor 8%, transparent);
+	border-radius: 8px;
+	animation: gb-shimmer 1.4s ease-in-out infinite;
+}
+
+.gb-sk-avatar {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.gb-sk-body {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding-top: 2px;
+}
+
+.gb-sk-line {
+	height: 14px;
+	border-radius: 6px;
+	width: 100%;
+}
+.gb-sk-short { width: 30%; }
+.gb-sk-medium { width: 60%; }
+
+@keyframes gb-shimmer {
+	0%, 100% { opacity: 0.5; }
+	50%       { opacity: 1; }
+}
+
+/* ─── Messages ─── */
+.gb-messages {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.gb-msg-card {
+	display: flex;
+	gap: 0.875rem;
+	align-items: flex-start;
+	padding: 1rem 1.1rem;
+	border: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+	border-radius: 14px;
+	background: color-mix(in srgb, currentColor 2%, transparent);
+	animation: gb-fadein 0.35s ease both;
+	transition: border-color 0.2s;
+}
+
+.gb-msg-card:hover {
+	border-color: color-mix(in srgb, currentColor 15%, transparent);
+}
+
+@keyframes gb-fadein {
+	from { opacity: 0; transform: translateY(8px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+.gb-avatar {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	color: white;
+	font-size: 1rem;
+	flex-shrink: 0;
+	text-transform: uppercase;
+	letter-spacing: -0.02em;
+}
+
+.gb-msg-body {
+	flex: 1;
+	min-width: 0;
+}
+
+.gb-msg-meta {
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+	margin-bottom: 0.35rem;
+	flex-wrap: wrap;
+}
+
+.gb-msg-name {
+	font-weight: 600;
+	font-size: 0.92rem;
+}
+
+.gb-msg-time {
+	font-size: 0.75rem;
+	opacity: 0.45;
+}
+
+.gb-msg-text {
+	font-size: 0.9rem;
+	line-height: 1.6;
+	word-break: break-word;
+	white-space: pre-wrap;
+	opacity: 0.85;
+}
+
+.gb-reply-block {
+	margin-top: 0.75rem;
+	padding: 0.6rem 0.875rem;
+	border-left: 3px solid hsl(var(--hue, 30) 65% 55%);
+	border-radius: 0 8px 8px 0;
+	background: color-mix(in srgb, hsl(var(--hue, 30) 65% 55%) 8%, transparent);
+}
+
+.gb-reply-label {
+	font-size: 0.72rem;
+	font-weight: 600;
+	opacity: 0.6;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	margin-bottom: 0.25rem;
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.gb-reply-text {
+	font-size: 0.88rem;
+	line-height: 1.55;
+	opacity: 0.85;
+}
+
+/* ─── Thread conversation ─── */
+.gb-thread {
+	margin-top: 0.75rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	border-left: 2px solid color-mix(in srgb, currentColor 10%, transparent);
+	padding-left: 0.75rem;
+}
+
+.gb-thread-msg {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+}
+
+.gb-thread-msg--admin {
+	border-left: 2px solid hsl(var(--hue, 30) 65% 55%);
+	padding-left: 0.6rem;
+	background: color-mix(in srgb, hsl(var(--hue, 30) 65% 55%) 6%, transparent);
+	border-radius: 0 6px 6px 0;
+	padding-top: 0.3rem;
+	padding-bottom: 0.3rem;
+}
+
+.gb-thread-author {
+	font-size: 0.75rem;
+	font-weight: 600;
+	opacity: 0.7;
+}
+
+.gb-thread-msg--admin .gb-thread-author {
+	color: hsl(var(--hue, 30) 70% 55%);
+	opacity: 1;
+}
+
+.gb-thread-time {
+	font-size: 0.68rem;
+	opacity: 0.4;
+	margin-left: 0.4rem;
+}
+
+.gb-thread-text {
+	font-size: 0.875rem;
+	line-height: 1.55;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+/* ─── Visitor reply form ─── */
+.gb-vr-area {
+	margin-top: 0.6rem;
+}
+
+.gb-vr-toggle {
+	font-size: 0.78rem;
+	opacity: 0.5;
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: inherit;
+	padding: 0;
+	font-family: inherit;
+	transition: opacity 0.15s;
+}
+
+.gb-vr-toggle:hover { opacity: 0.85; }
+
+.gb-vr-form {
+	display: none;
+	flex-direction: column;
+	gap: 0.4rem;
+	margin-top: 0.5rem;
+}
+
+.gb-vr-form.open { display: flex; }
+
+.gb-vr-name,
+.gb-vr-msg {
+	width: 100%;
+	background: color-mix(in srgb, currentColor 5%, transparent);
+	border: 1.5px solid color-mix(in srgb, currentColor 12%, transparent);
+	border-radius: 8px;
+	padding: 0.5rem 0.75rem;
+	font-size: 0.875rem;
+	font-family: inherit;
+	color: inherit;
+	outline: none;
+	resize: none;
+	box-sizing: border-box;
+	transition: border-color 0.2s;
+}
+
+.gb-vr-name:focus,
+.gb-vr-msg:focus {
+	border-color: hsl(var(--hue, 30) 75% 55%);
+}
+
+.gb-vr-actions {
+	display: flex;
+	gap: 0.4rem;
+	justify-content: flex-end;
+}
+
+.gb-vr-cancel {
+	padding: 0.35rem 0.75rem;
+	background: color-mix(in srgb, currentColor 8%, transparent);
+	border: none;
+	border-radius: 7px;
+	font-size: 0.8rem;
+	font-family: inherit;
+	color: inherit;
+	cursor: pointer;
+}
+
+.gb-vr-send {
+	padding: 0.35rem 0.875rem;
+	background: hsl(var(--hue, 30) 75% 55%);
+	color: white;
+	border: none;
+	border-radius: 7px;
+	font-size: 0.8rem;
+	font-weight: 600;
+	font-family: inherit;
+	cursor: pointer;
+	transition: background 0.15s;
+}
+
+.gb-vr-send:hover { background: hsl(var(--hue, 30) 75% 48%); }
+.gb-vr-send:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ─── Dark mode explicit text colors ─── */
+:root.dark .gb-form-card,
+:root.dark .gb-msg-card,
+:root.dark .gb-msg-name,
+:root.dark .gb-msg-text,
+:root.dark .gb-reply-text,
+:root.dark .gb-field label,
+:root.dark .gb-form-title,
+:root.dark .gb-count,
+:root.dark .gb-empty p {
+	color: rgb(255 255 255 / 0.88);
+}
+
+:root.dark .gb-msg-time,
+:root.dark .gb-reply-label,
+:root.dark .gb-counter {
+	color: rgb(255 255 255 / 0.45);
+}
+
+:root.dark .gb-input-wrap input,
+:root.dark .gb-input-wrap textarea,
+:root.dark .gb-vr-name,
+:root.dark .gb-vr-msg {
+	color: rgb(255 255 255 / 0.88);
+}
+
+:root.dark .gb-thread-text,
+:root.dark .gb-thread-author,
+:root.dark .gb-vr-toggle,
+:root.dark .gb-vr-cancel {
+	color: rgb(255 255 255 / 0.85);
+}
+
+:root:not(.dark) .gb-form-card,
+:root:not(.dark) .gb-msg-card,
+:root:not(.dark) .gb-msg-name,
+:root:not(.dark) .gb-msg-text,
+:root:not(.dark) .gb-field label,
+:root:not(.dark) .gb-form-title {
+	color: rgb(0 0 0 / 0.85);
+}
+
+/* ─── Empty ─── */
+.gb-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 3rem 1rem;
+	opacity: 0.45;
+	text-align: center;
+}
+
+.gb-empty-icon {
+	font-size: 2.5rem;
+}
+
+.gb-empty p {
+	font-size: 0.9rem;
+	margin: 0;
+}
+</style>
+
+<script is:inline define:vars={{ SUPABASE_URL, SUPABASE_KEY, MAX_NAME, MAX_MSG }}>
+(function () {
+	const API = `${SUPABASE_URL}/rest/v1/guestbook`;
+	const HEADERS = {
+		apikey: SUPABASE_KEY,
+		Authorization: `Bearer ${SUPABASE_KEY}`,
+		"Content-Type": "application/json",
+	};
+	const RATE_LIMIT_KEY = "gb_last_sent";
+	const RATE_LIMIT_MS = 60_000;
+
+	const AVATAR_COLORS = [
+		"#e56d5a","#e5935a","#d4b84a","#66b85a","#5ab8a3",
+		"#5a91e5","#7b5ae5","#c05ae5","#e55ab1","#e55a6d",
+	];
+
+	function avatarColor(name) {
+		let h = 0;
+		for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+		return AVATAR_COLORS[h % AVATAR_COLORS.length];
+	}
+
+	function timeAgo(iso) {
+		const diff = Date.now() - new Date(iso).getTime();
+		const m = Math.floor(diff / 60000);
+		const h = Math.floor(m / 60);
+		const d = Math.floor(h / 24);
+		if (m < 1)  return "just now";
+		if (m < 60) return `${m}m ago`;
+		if (h < 24) return `${h}h ago`;
+		if (d < 30) return `${d}d ago`;
+		return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+	}
+
+	function escape(str) {
+		return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+	}
+
+	// keyed by message id so we can access thread data from event handlers
+	const threadCache = new Map();
+
+	function renderThread(thread) {
+		if (!thread || !thread.length) return "";
+		return `<div class="gb-thread">
+			${thread.map(t => `
+			<div class="gb-thread-msg gb-thread-msg--${t.role}">
+				<span class="gb-thread-author">${t.role === "admin" ? "✦ Rebiz" : escape(t.name || "Anonymous")}</span>
+				<span class="gb-thread-time">${timeAgo(t.ts)}</span>
+				<div class="gb-thread-text">${escape(t.content)}</div>
+			</div>`).join("")}
+		</div>`;
+	}
+
+	function renderCard(msg, idx) {
+		const initial = (msg.name || "?")[0].toUpperCase();
+		const color   = avatarColor(msg.name || "?");
+		const thread  = msg.thread || [];
+		threadCache.set(String(msg.id), thread);
+
+		const lastEntry = thread[thread.length - 1];
+		const canReply  = !lastEntry || lastEntry.role === "admin";
+
+		return `
+		<div class="gb-msg-card" data-id="${msg.id}" style="animation-delay:${idx * 0.06}s">
+			<div class="gb-avatar" style="background:${color}">${initial}</div>
+			<div class="gb-msg-body">
+				<div class="gb-msg-meta">
+					<span class="gb-msg-name">${escape(msg.name)}</span>
+					<span class="gb-msg-time">${timeAgo(msg.created_at)}</span>
+				</div>
+				<div class="gb-msg-text">${escape(msg.message)}</div>
+				${renderThread(thread)}
+				${canReply ? `
+				<div class="gb-vr-area">
+					<button class="gb-vr-toggle" data-id="${msg.id}" type="button">↩ Reply</button>
+					<div class="gb-vr-form" id="gbvrf-${msg.id}">
+						<input class="gb-vr-name" type="text" placeholder="Your name (optional)" maxlength="50" />
+						<textarea class="gb-vr-msg" rows="2" placeholder="Your reply..."></textarea>
+						<div class="gb-vr-actions">
+							<button class="gb-vr-cancel" data-id="${msg.id}" type="button">Cancel</button>
+							<button class="gb-vr-send" data-id="${msg.id}" type="button">Send →</button>
+						</div>
+					</div>
+				</div>` : ""}
+			</div>
+		</div>`;
+	}
+
+	async function fetchMessages() {
+		const res = await fetch(
+			`${API}?is_deleted=eq.false&order=created_at.desc&select=id,name,message,thread,created_at`,
+			{ headers: HEADERS }
+		);
+		if (!res.ok) throw new Error("fetch failed");
+		return res.json();
+	}
+
+	async function appendToThread(id, entry) {
+		const current = threadCache.get(String(id)) || [];
+		const updated = [...current, entry];
+		const res = await fetch(`${API}?id=eq.${id}`, {
+			method: "PATCH",
+			headers: { ...HEADERS, Prefer: "return=minimal" },
+			body: JSON.stringify({ thread: updated }),
+		});
+		return res.ok;
+	}
+
+	function attachThreadHandlers() {
+		document.querySelectorAll(".gb-vr-toggle").forEach(btn => {
+			btn.addEventListener("click", () => {
+				const form = document.getElementById(`gbvrf-${btn.dataset.id}`);
+				const open = form.classList.toggle("open");
+				if (open) form.querySelector(".gb-vr-msg").focus();
+			});
+		});
+
+		document.querySelectorAll(".gb-vr-cancel").forEach(btn => {
+			btn.addEventListener("click", () => {
+				document.getElementById(`gbvrf-${btn.dataset.id}`).classList.remove("open");
+			});
+		});
+
+		document.querySelectorAll(".gb-vr-send").forEach(btn => {
+			btn.addEventListener("click", async () => {
+				const id   = btn.dataset.id;
+				const form = document.getElementById(`gbvrf-${id}`);
+				const name = form.querySelector(".gb-vr-name").value.trim() || "Anonymous";
+				const content = form.querySelector(".gb-vr-msg").value.trim();
+				if (!content) return;
+
+				btn.disabled = true;
+				btn.textContent = "Sending...";
+				const ok = await appendToThread(id, { role: "visitor", name, content, ts: new Date().toISOString() });
+				if (ok) {
+					window.toast?.success("Reply sent!");
+					await loadMessages();
+				} else {
+					window.toast?.error("Failed to send. Try again.");
+					btn.disabled = false;
+					btn.textContent = "Send →";
+				}
+			});
+		});
+	}
+
+	async function loadMessages() {
+		const loading  = document.getElementById("gb-loading");
+		const wall     = document.getElementById("gb-messages");
+		const empty    = document.getElementById("gb-empty");
+		const countEl  = document.getElementById("gb-count");
+		if (!wall) return;
+
+		try {
+			const msgs = await fetchMessages();
+			loading.style.display = "none";
+
+			if (!msgs.length) {
+				empty.style.display = "flex";
+				return;
+			}
+
+			countEl.textContent = `${msgs.length} message${msgs.length !== 1 ? "s" : ""}`;
+			countEl.style.display = "block";
+			wall.innerHTML = msgs.map((m, i) => renderCard(m, i)).join("");
+			wall.style.display = "flex";
+			attachThreadHandlers();
+		} catch {
+			loading.style.display = "none";
+			empty.style.display = "flex";
+		}
+	}
+
+	function setupForm() {
+		const form      = document.getElementById("gb-form");
+		const nameInput = document.getElementById("gb-name");
+		const msgInput  = document.getElementById("gb-message");
+		const submitBtn = document.getElementById("gb-submit");
+		const btnText   = document.getElementById("gb-btn-text");
+		const status    = document.getElementById("gb-status");
+		const nameCtr   = document.getElementById("name-counter");
+		const msgCtr    = document.getElementById("msg-counter");
+
+		if (!form) return;
+
+		nameInput.addEventListener("input", () => {
+			nameCtr.textContent = `${nameInput.value.length}/${MAX_NAME}`;
+		});
+		msgInput.addEventListener("input", () => {
+			msgCtr.textContent = `${msgInput.value.length}/${MAX_MSG}`;
+		});
+
+		form.addEventListener("submit", async (e) => {
+			e.preventDefault();
+			const name    = nameInput.value.trim() || "Anonymous";
+			const message = msgInput.value.trim();
+
+			if (!message) {
+				status.textContent = "Please write a message first.";
+				status.className = "gb-status gb-status--error";
+				return;
+			}
+
+			// Rate limit
+			const last = parseInt(localStorage.getItem(RATE_LIMIT_KEY) || "0");
+			if (Date.now() - last < RATE_LIMIT_MS) {
+				window.toast?.warning("Please wait a moment before sending another message.");
+				return;
+			}
+
+			submitBtn.disabled = true;
+			btnText.textContent = "Sending...";
+			status.textContent = "";
+			status.className = "gb-status";
+
+			try {
+				const res = await fetch(API, {
+					method: "POST",
+					headers: { ...HEADERS, Prefer: "return=minimal" },
+					body: JSON.stringify({ name, message }),
+				});
+
+				if (!res.ok) throw new Error("post failed");
+
+				localStorage.setItem(RATE_LIMIT_KEY, Date.now().toString());
+				nameInput.value = "";
+				msgInput.value = "";
+				nameCtr.textContent = `0/${MAX_NAME}`;
+				msgCtr.textContent = `0/${MAX_MSG}`;
+				status.textContent = "";
+				status.className = "gb-status";
+				window.toast?.success("Message sent! Thanks for stopping by 👋");
+
+				// Prepend new message optimistically
+				await loadMessages();
+			} catch {
+				window.toast?.error("Failed to send. Please try again.");
+			} finally {
+				submitBtn.disabled = false;
+				btnText.textContent = "Send Message";
+			}
+		});
+	}
+
+	function init() {
+		loadMessages();
+		setupForm();
+	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", init);
+	} else {
+		init();
+	}
+
+	document.addEventListener("mizuki:page:loaded", init);
+})();
+</script>

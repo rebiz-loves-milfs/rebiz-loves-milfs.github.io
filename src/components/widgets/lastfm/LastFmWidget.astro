@@ -1,0 +1,34 @@
+---
+import I18nKey from "../../../i18n/i18nKey";
+import { i18n } from "../../../i18n/translation";
+import { lastFmConfig } from "../../../config";
+import WidgetLayout from "../common/WidgetLayout.astro";
+import LastFmClient from "./LastFmClient.svelte";
+import type { LastFmWidgetProps } from "./types";
+
+const { class: className, style }: LastFmWidgetProps = Astro.props;
+const widgetId = `lastfm-widget-${Math.random().toString(36).substring(2, 9)}`;
+---
+
+<WidgetLayout
+	id={widgetId}
+	class={className}
+	style={style}
+	name={i18n(I18nKey.lastFmNowPlaying)}
+>
+	<LastFmClient client:only="svelte" />
+</WidgetLayout>
+
+<script is:inline define:vars={{
+	lastFmUsername: lastFmConfig.username,
+	lastFmApiKey: lastFmConfig.apiKey,
+	lastFmLimit: lastFmConfig.recentTracksLimit ?? 5,
+	lastFmPollInterval: lastFmConfig.pollInterval ?? 30000
+}}>
+	window.__lastFmConfig = {
+		username: lastFmUsername,
+		apiKey: lastFmApiKey,
+		limit: lastFmLimit,
+		pollInterval: lastFmPollInterval
+	};
+</script>

@@ -1,0 +1,223 @@
+---
+// Custom animated cursor — dot + trailing ring, theme-aware
+// Only renders on non-touch (pointer: fine) devices
+---
+
+<div id="cur-dot"  class="cur-el cur-dot"  aria-hidden="true"></div>
+<div id="cur-ring" class="cur-el cur-ring" aria-hidden="true"></div>
+
+<style is:global>
+/* ─── Hide native cursor on pointer devices only ─── */
+@media (pointer: fine) {
+	html, body,
+	a, button, input, textarea, select, label, [role="button"],
+	[tabindex], summary {
+		cursor: none !important;
+	}
+}
+
+/* ─── Cursor elements base ─── */
+.cur-el {
+	position: fixed;
+	top: 0;
+	left: 0;
+	pointer-events: none;
+	z-index: 99999;
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	will-change: transform, width, height, opacity;
+	transition: opacity 0.3s ease;
+}
+
+/* ─── Dot ─── */
+.cur-dot {
+	width: 7px;
+	height: 7px;
+	background: hsl(var(--hue, 30) 80% 58%);
+	transition:
+		width 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+		height 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+		background 0.2s ease,
+		border-radius 0.2s ease,
+		opacity 0.3s ease;
+}
+
+/* ─── Ring ─── */
+.cur-ring {
+	width: 30px;
+	height: 30px;
+	border: 2px solid hsl(var(--hue, 30) 75% 58% / 0.55);
+	background: transparent;
+	transition:
+		width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+		height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+		border-color 0.25s ease,
+		background 0.25s ease,
+		border-radius 0.25s ease,
+		opacity 0.3s ease;
+}
+
+/* ─── States: interactive hover ─── */
+.cur-dot.hover {
+	width: 5px;
+	height: 5px;
+	background: hsl(var(--hue, 30) 80% 65%);
+}
+
+.cur-ring.hover {
+	width: 46px;
+	height: 46px;
+	border-color: hsl(var(--hue, 30) 75% 60% / 0.4);
+	background: hsl(var(--hue, 30) 75% 60% / 0.06);
+}
+
+/* ─── States: text / input hover ─── */
+.cur-dot.text {
+	width: 2px;
+	height: 20px;
+	border-radius: 2px;
+	background: hsl(var(--hue, 30) 75% 58%);
+	animation: cur-blink 1s ease infinite;
+}
+
+.cur-ring.text {
+	opacity: 0;
+}
+
+@keyframes cur-blink {
+	0%, 100% { opacity: 1; }
+	50%       { opacity: 0.4; }
+}
+
+/* ─── States: click burst ─── */
+.cur-ring.clicking {
+	width: 22px;
+	height: 22px;
+	border-color: hsl(var(--hue, 30) 80% 62% / 0.9);
+	background: hsl(var(--hue, 30) 80% 62% / 0.18);
+	transition:
+		width 0.12s ease,
+		height 0.12s ease,
+		border-color 0.12s ease,
+		background 0.12s ease;
+}
+
+.cur-dot.clicking {
+	width: 10px;
+	height: 10px;
+	transition:
+		width 0.12s ease,
+		height 0.12s ease;
+}
+
+/* ─── Hidden when out of window ─── */
+.cur-el.hidden {
+	opacity: 0;
+}
+
+/* ─── Disable on touch ─── */
+@media (pointer: coarse) {
+	.cur-el { display: none; }
+}
+</style>
+
+<script is:inline>
+(function () {
+	// Skip on touch devices
+	if (window.matchMedia("(pointer: coarse)").matches) return;
+
+	const dot  = document.getElementById("cur-dot");
+	const ring = document.getElementById("cur-ring");
+	if (!dot || !ring) return;
+
+	let mouseX = -100, mouseY = -100;
+	let ringX  = -100, ringY  = -100;
+	let rafId  = null;
+	let isHidden = true;
+	let state = "default"; // "default" | "hover" | "text" | "clicking"
+
+	const LERP = 0.13; // ring lag factor (lower = more lag)
+
+	function lerp(a, b, t) { return a + (b - a) * t; }
+
+	function applyState(s) {
+		if (state === s) return;
+		state = s;
+		dot.className  = `cur-el cur-dot${s !== "default" ? " " + s : ""}`;
+		ring.className = `cur-el cur-ring${s !== "default" ? " " + s : ""}`;
+	}
+
+	function tick() {
+		ringX = lerp(ringX, mouseX, LERP);
+		ringY = lerp(ringY, mouseY, LERP);
+
+		dot.style.transform  = `translate(calc(${mouseX}px - 50%), calc(${mouseY}px - 50%))`;
+		ring.style.transform = `translate(calc(${ringX}px - 50%), calc(${ringY}px - 50%))`;
+
+		rafId = requestAnimationFrame(tick);
+	}
+
+	// ─── Mouse move ───
+	document.addEventListener("mousemove", (e) => {
+		mouseX = e.clientX;
+		mouseY = e.clientY;
+
+		if (isHidden) {
+			isHidden = false;
+			// Teleport ring instantly on first appear
+			ringX = mouseX;
+			ringY = mouseY;
+			dot.classList.remove("hidden");
+			ring.classList.remove("hidden");
+		}
+	}, { passive: true });
+
+	document.addEventListener("mouseleave", () => {
+		isHidden = true;
+		dot.classList.add("hidden");
+		ring.classList.add("hidden");
+	});
+
+	document.addEventListener("mouseenter", () => {
+		isHidden = false;
+		dot.classList.remove("hidden");
+		ring.classList.remove("hidden");
+	});
+
+	// ─── Hover detection ───
+	const INTERACTIVE = "a, button, [role='button'], [tabindex], label, summary, .gb-btn-primary, .adm-btn, .cmdpal-item";
+	const TEXT_INPUTS  = "input[type='text'], input[type='password'], input[type='email'], input[type='search'], textarea";
+
+	function getTargetState(el) {
+		if (!el) return "default";
+		if (el.closest(TEXT_INPUTS)) return "text";
+		if (el.closest(INTERACTIVE)) return "hover";
+		return "default";
+	}
+
+	document.addEventListener("mouseover", (e) => {
+		if (state !== "clicking") {
+			applyState(getTargetState(e.target));
+		}
+	}, { passive: true });
+
+	// ─── Click burst ───
+	document.addEventListener("mousedown", () => {
+		applyState("clicking");
+	});
+
+	document.addEventListener("mouseup", (e) => {
+		// Restore state based on what's under cursor
+		setTimeout(() => applyState(getTargetState(e.target)), 120);
+	});
+
+	// ─── Start animation loop ───
+	rafId = requestAnimationFrame(tick);
+
+	// ─── Cleanup on Swup page transition ───
+	document.addEventListener("mizuki:page:loaded", () => {
+		// Re-check element under cursor after navigation
+		applyState("default");
+	});
+})();
+</script>

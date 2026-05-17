@@ -1,0 +1,251 @@
+---
+// Global toast notification system
+// Usage anywhere: window.toast.success("Done!") / .error() / .warning() / .info()
+---
+
+<div id="toast-container" class="toast-container" aria-live="polite" aria-label="Notifications"></div>
+
+<style is:global>
+/* ─── Container ─── */
+.toast-container {
+	position: fixed;
+	bottom: 1.5rem;
+	right: 1.5rem;
+	z-index: 99998;
+	display: flex;
+	flex-direction: column-reverse;
+	gap: 0.6rem;
+	pointer-events: none;
+	max-width: min(340px, calc(100vw - 2rem));
+}
+
+/* ─── Toast card ─── */
+.toast {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.65rem;
+	padding: 0.75rem 0.875rem;
+	border-radius: 14px;
+	border: 1px solid transparent;
+	box-shadow:
+		0 8px 24px rgba(0, 0, 0, 0.14),
+		0 2px 8px rgba(0, 0, 0, 0.08);
+	pointer-events: all;
+	position: relative;
+	overflow: hidden;
+	cursor: pointer;
+	min-width: 240px;
+	color: rgb(0 0 0 / 0.85);
+
+	/* Entry animation */
+	animation: toast-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+:root.dark .toast {
+	color: rgb(255 255 255 / 0.88);
+}
+
+.toast.removing {
+	animation: toast-out 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes toast-in {
+	from {
+		opacity: 0;
+		transform: translateX(calc(100% + 1rem));
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes toast-out {
+	from {
+		opacity: 1;
+		transform: translateX(0);
+		max-height: 80px;
+		margin-bottom: 0;
+	}
+	to {
+		opacity: 0;
+		transform: translateX(calc(100% + 1rem));
+		max-height: 0;
+		margin-bottom: -0.6rem;
+	}
+}
+
+/* ─── Type variants ─── */
+.toast--success {
+	background: color-mix(in srgb, oklch(65% 0.2 145) 10%, var(--card-bg, #fff));
+	border-color: color-mix(in srgb, oklch(65% 0.2 145) 25%, transparent);
+}
+
+.toast--error {
+	background: color-mix(in srgb, oklch(60% 0.22 25) 10%, var(--card-bg, #fff));
+	border-color: color-mix(in srgb, oklch(60% 0.22 25) 25%, transparent);
+}
+
+.toast--warning {
+	background: color-mix(in srgb, oklch(75% 0.18 70) 12%, var(--card-bg, #fff));
+	border-color: color-mix(in srgb, oklch(75% 0.18 70) 28%, transparent);
+}
+
+.toast--info {
+	background: color-mix(in srgb, hsl(var(--hue, 200) 75% 55%) 10%, var(--card-bg, #fff));
+	border-color: color-mix(in srgb, hsl(var(--hue, 200) 75% 55%) 22%, transparent);
+}
+
+/* ─── Icon ─── */
+.toast-icon {
+	font-size: 1.1rem;
+	flex-shrink: 0;
+	line-height: 1.4;
+}
+
+/* ─── Body ─── */
+.toast-body {
+	flex: 1;
+	min-width: 0;
+}
+
+.toast-message {
+	font-size: 0.865rem;
+	line-height: 1.5;
+	font-weight: 500;
+	word-break: break-word;
+}
+
+/* ─── Close button ─── */
+.toast-close {
+	flex-shrink: 0;
+	opacity: 0.35;
+	font-size: 0.85rem;
+	line-height: 1;
+	padding: 2px;
+	transition: opacity 0.15s;
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: inherit;
+	font-family: inherit;
+	align-self: flex-start;
+}
+
+.toast-close:hover {
+	opacity: 0.7;
+}
+
+/* ─── Progress bar ─── */
+.toast-progress {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	height: 3px;
+	border-radius: 0 0 14px 14px;
+	transform-origin: left;
+}
+
+.toast--success .toast-progress  { background: oklch(65% 0.2 145); }
+.toast--error   .toast-progress  { background: oklch(60% 0.22 25); }
+.toast--warning .toast-progress  { background: oklch(75% 0.18 70); }
+.toast--info    .toast-progress  { background: hsl(var(--hue, 200) 75% 55%); }
+
+/* ─── Mobile: full-width, bottom center ─── */
+@media (max-width: 480px) {
+	.toast-container {
+		right: 0.75rem;
+		left: 0.75rem;
+		bottom: 5rem;
+		max-width: none;
+	}
+
+	.toast {
+		min-width: 0;
+	}
+}
+</style>
+
+<script is:inline>
+(function () {
+	const ICONS = {
+		success: "✓",
+		error:   "✕",
+		warning: "⚠",
+		info:    "ℹ",
+	};
+
+	const DEFAULT_DURATION = 3800;
+
+	let container = document.getElementById("toast-container");
+
+	function getContainer() {
+		if (!container || !document.contains(container)) {
+			container = document.getElementById("toast-container");
+		}
+		return container;
+	}
+
+	function show({ type = "info", message, duration = DEFAULT_DURATION }) {
+		const c = getContainer();
+		if (!c) return;
+
+		const toast = document.createElement("div");
+		toast.className = `toast toast--${type}`;
+		toast.setAttribute("role", "alert");
+		toast.innerHTML = `
+			<span class="toast-icon">${ICONS[type] || ICONS.info}</span>
+			<div class="toast-body">
+				<div class="toast-message">${message}</div>
+			</div>
+			<button class="toast-close" aria-label="Dismiss">✕</button>
+			<div class="toast-progress"></div>
+		`;
+
+		c.appendChild(toast);
+
+		// Progress bar animation
+		const bar = toast.querySelector(".toast-progress");
+		if (bar) {
+			bar.style.width = "100%";
+			bar.style.transition = `width ${duration}ms linear`;
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					bar.style.width = "0%";
+				});
+			});
+		}
+
+		// Auto-dismiss
+		const timer = setTimeout(() => remove(toast), duration);
+
+		// Click anywhere to dismiss
+		toast.addEventListener("click", () => {
+			clearTimeout(timer);
+			remove(toast);
+		});
+
+		return toast;
+	}
+
+	function remove(toast) {
+		if (!toast || !document.contains(toast)) return;
+		toast.classList.add("removing");
+		toast.addEventListener("animationend", () => toast.remove(), { once: true });
+	}
+
+	// ─── Public API ───
+	window.toast = {
+		show,
+		success: (msg, opts = {}) => show({ type: "success", message: msg, ...opts }),
+		error:   (msg, opts = {}) => show({ type: "error",   message: msg, ...opts }),
+		warning: (msg, opts = {}) => show({ type: "warning", message: msg, ...opts }),
+		info:    (msg, opts = {}) => show({ type: "info",    message: msg, ...opts }),
+	};
+
+	// Re-init container ref after Swup navigation
+	document.addEventListener("mizuki:page:loaded", () => {
+		container = document.getElementById("toast-container");
+	});
+})();
+</script>

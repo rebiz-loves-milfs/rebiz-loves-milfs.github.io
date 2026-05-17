@@ -1,0 +1,754 @@
+---
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { guestbookConfig } from "../../config";
+
+if (!guestbookConfig.enable) {
+	return Astro.redirect("/404/");
+}
+
+const SUPABASE_URL = guestbookConfig.supabaseUrl;
+const SUPABASE_KEY = guestbookConfig.supabaseKey;
+const ADMIN_PASSWORD = guestbookConfig.adminPassword;
+---
+
+<MainGridLayout title="Guestbook Admin" description="Manage guestbook messages">
+	<div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative">
+		<div class="card-base z-10 px-6 py-6 md:px-9 relative w-full">
+
+			<!-- Lock screen -->
+			<div id="admin-lock" class="admin-lock">
+				<div class="lock-card">
+					<div class="lock-icon">🔒</div>
+					<h2 class="lock-title">Admin Access</h2>
+					<p class="lock-subtitle">Guestbook moderation panel</p>
+					<form id="lock-form" class="lock-form" novalidate>
+						<div class="lock-field">
+							<input
+								id="admin-pwd"
+								type="password"
+								placeholder="Enter admin password"
+								autocomplete="current-password"
+								class="lock-input"
+							/>
+						</div>
+						<button type="submit" class="lock-btn">Unlock →</button>
+						<p id="lock-error" class="lock-error" style="display:none">Wrong password, try again</p>
+					</form>
+				</div>
+			</div>
+
+			<!-- Admin panel (shown after auth) -->
+			<div id="admin-panel" style="display:none">
+				<div class="admin-header">
+					<div>
+						<h1 class="admin-title">Guestbook Admin</h1>
+						<p class="admin-subtitle" id="admin-count"></p>
+					</div>
+					<div class="admin-actions">
+						<button id="admin-refresh" class="adm-btn adm-btn--ghost" title="Refresh">⟳ Refresh</button>
+						<button id="admin-logout" class="adm-btn adm-btn--ghost">Sign out</button>
+					</div>
+				</div>
+
+				<div id="adm-loading" class="adm-loading">Loading messages...</div>
+				<div id="adm-empty" class="adm-empty" style="display:none">No messages yet.</div>
+				<div id="adm-messages" class="adm-messages" style="display:none"></div>
+			</div>
+
+		</div>
+	</div>
+</MainGridLayout>
+
+<style is:global>
+/* ─── Lock screen ─── */
+.admin-lock {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 60vh;
+}
+
+.lock-card {
+	width: 100%;
+	max-width: 360px;
+	text-align: center;
+	padding: 2rem;
+	border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+	border-radius: 20px;
+	background: color-mix(in srgb, currentColor 3%, transparent);
+}
+
+.lock-icon {
+	font-size: 2.5rem;
+	margin-bottom: 0.75rem;
+}
+
+.lock-title {
+	font-size: 1.4rem;
+	font-weight: 700;
+	margin: 0 0 0.25rem;
+}
+
+.lock-subtitle {
+	font-size: 0.85rem;
+	opacity: 0.5;
+	margin: 0 0 1.5rem;
+}
+
+.lock-form {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.lock-field {
+	position: relative;
+}
+
+.lock-input {
+	width: 100%;
+	padding: 0.65rem 1rem;
+	background: color-mix(in srgb, currentColor 5%, transparent);
+	border: 1.5px solid color-mix(in srgb, currentColor 12%, transparent);
+	border-radius: 10px;
+	font-size: 0.9rem;
+	font-family: inherit;
+	color: inherit;
+	outline: none;
+	box-sizing: border-box;
+	transition: border-color 0.2s, box-shadow 0.2s;
+	text-align: center;
+	letter-spacing: 0.1em;
+}
+
+.lock-input:focus {
+	border-color: hsl(var(--hue, 30) 75% 55%);
+	box-shadow: 0 0 0 3px color-mix(in srgb, hsl(var(--hue, 30) 75% 55%) 15%, transparent);
+}
+
+.lock-btn {
+	width: 100%;
+	padding: 0.65rem;
+	background: hsl(var(--hue, 30) 75% 55%);
+	color: white;
+	border: none;
+	border-radius: 10px;
+	font-size: 0.9rem;
+	font-weight: 600;
+	font-family: inherit;
+	cursor: pointer;
+	transition: background 0.2s, transform 0.15s;
+}
+
+.lock-btn:hover { background: hsl(var(--hue, 30) 75% 48%); }
+.lock-btn:active { transform: scale(0.98); }
+
+.lock-error {
+	font-size: 0.82rem;
+	color: oklch(60% 0.22 25);
+	margin: 0;
+}
+
+/* ─── Admin header ─── */
+.admin-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+	margin-bottom: 1.5rem;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.admin-title {
+	font-size: 1.5rem;
+	font-weight: 700;
+	margin: 0 0 0.2rem;
+}
+
+.admin-subtitle {
+	font-size: 0.82rem;
+	opacity: 0.45;
+	margin: 0;
+}
+
+.admin-actions {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.adm-btn {
+	padding: 0.45rem 0.875rem;
+	border-radius: 8px;
+	font-size: 0.82rem;
+	font-weight: 500;
+	font-family: inherit;
+	cursor: pointer;
+	border: none;
+	transition: background 0.15s, transform 0.1s;
+}
+
+.adm-btn--ghost {
+	background: color-mix(in srgb, currentColor 8%, transparent);
+	color: inherit;
+}
+
+.adm-btn--ghost:hover {
+	background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.adm-btn--danger {
+	background: color-mix(in srgb, oklch(60% 0.22 25) 15%, transparent);
+	color: oklch(55% 0.22 25);
+}
+
+.adm-btn--danger:hover {
+	background: color-mix(in srgb, oklch(60% 0.22 25) 25%, transparent);
+}
+
+.adm-btn--primary {
+	background: hsl(var(--hue, 30) 75% 55%);
+	color: white;
+}
+
+.adm-btn--primary:hover { background: hsl(var(--hue, 30) 75% 48%); }
+
+/* ─── Loading / empty ─── */
+.adm-loading, .adm-empty {
+	padding: 3rem 1rem;
+	text-align: center;
+	opacity: 0.4;
+	font-size: 0.9rem;
+}
+
+/* ─── Message list ─── */
+.adm-messages {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+}
+
+.adm-msg-card {
+	border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+	border-radius: 14px;
+	padding: 1rem 1.1rem;
+	background: color-mix(in srgb, currentColor 2%, transparent);
+	animation: adm-in 0.25s ease both;
+}
+
+@keyframes adm-in {
+	from { opacity: 0; transform: translateY(6px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+.adm-msg-top {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+}
+
+.adm-avatar {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	color: white;
+	font-size: 0.9rem;
+	flex-shrink: 0;
+	text-transform: uppercase;
+}
+
+.adm-msg-content {
+	flex: 1;
+	min-width: 0;
+}
+
+.adm-msg-meta {
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+	margin-bottom: 0.3rem;
+	flex-wrap: wrap;
+}
+
+.adm-msg-name {
+	font-weight: 600;
+	font-size: 0.9rem;
+}
+
+.adm-msg-time {
+	font-size: 0.73rem;
+	opacity: 0.4;
+}
+
+.adm-msg-text {
+	font-size: 0.88rem;
+	line-height: 1.6;
+	opacity: 0.8;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.adm-msg-controls {
+	display: flex;
+	gap: 0.4rem;
+	flex-shrink: 0;
+}
+
+/* Reply section */
+.adm-existing-reply {
+	margin-top: 0.75rem;
+	padding: 0.6rem 0.875rem;
+	border-left: 3px solid hsl(var(--hue, 30) 65% 55%);
+	border-radius: 0 8px 8px 0;
+	background: color-mix(in srgb, hsl(var(--hue, 30) 65% 55%) 8%, transparent);
+	font-size: 0.85rem;
+}
+
+.adm-reply-label {
+	font-size: 0.7rem;
+	font-weight: 600;
+	opacity: 0.55;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	margin-bottom: 0.2rem;
+}
+
+.adm-reply-form {
+	margin-top: 0.875rem;
+	display: none;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.adm-reply-form.open {
+	display: flex;
+}
+
+.adm-reply-textarea {
+	width: 100%;
+	padding: 0.55rem 0.875rem;
+	background: color-mix(in srgb, currentColor 5%, transparent);
+	border: 1.5px solid color-mix(in srgb, currentColor 12%, transparent);
+	border-radius: 8px;
+	font-size: 0.875rem;
+	font-family: inherit;
+	color: inherit;
+	resize: none;
+	outline: none;
+	box-sizing: border-box;
+	transition: border-color 0.2s;
+}
+
+.adm-reply-textarea:focus {
+	border-color: hsl(var(--hue, 30) 75% 55%);
+}
+
+.adm-reply-actions {
+	display: flex;
+	gap: 0.4rem;
+	justify-content: flex-end;
+}
+
+/* ─── Thread display ─── */
+.adm-thread {
+	margin-top: 0.6rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+	border-left: 2px solid color-mix(in srgb, currentColor 10%, transparent);
+	padding-left: 0.75rem;
+}
+
+.adm-thread-msg {
+	padding: 0.4rem 0.6rem;
+	border-radius: 0 6px 6px 0;
+}
+
+.adm-thread-msg--admin {
+	background: color-mix(in srgb, hsl(var(--hue, 30) 65% 55%) 8%, transparent);
+	border-left: 2px solid hsl(var(--hue, 30) 65% 55%);
+}
+
+.adm-thread-msg--visitor {
+	background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+.adm-thread-meta {
+	display: flex;
+	align-items: baseline;
+	gap: 0.4rem;
+	margin-bottom: 0.15rem;
+}
+
+.adm-thread-author {
+	font-size: 0.73rem;
+	font-weight: 600;
+	opacity: 0.7;
+}
+
+.adm-thread-msg--admin .adm-thread-author {
+	color: hsl(var(--hue, 30) 70% 58%);
+	opacity: 1;
+}
+
+.adm-thread-time {
+	font-size: 0.65rem;
+	opacity: 0.4;
+}
+
+.adm-thread-text {
+	font-size: 0.85rem;
+	line-height: 1.55;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+/* ─── Dark mode text ─── */
+:root.dark .lock-title,
+:root.dark .lock-subtitle,
+:root.dark .admin-title,
+:root.dark .admin-subtitle,
+:root.dark .adm-msg-name,
+:root.dark .adm-msg-text,
+:root.dark .adm-msg-time,
+:root.dark .adm-reply-label,
+:root.dark .adm-existing-reply,
+:root.dark .adm-loading,
+:root.dark .adm-empty {
+	color: rgb(255 255 255 / 0.88);
+}
+
+:root.dark .adm-msg-time { color: rgb(255 255 255 / 0.4); }
+
+:root.dark .lock-input,
+:root.dark .adm-reply-textarea {
+	color: rgb(255 255 255 / 0.88);
+}
+
+:root.dark .adm-btn--ghost {
+	color: rgb(255 255 255 / 0.75);
+}
+
+:root.dark .adm-thread-text,
+:root.dark .adm-thread-author {
+	color: rgb(255 255 255 / 0.85);
+}
+
+:root.dark .adm-reply-textarea {
+	color: rgb(255 255 255 / 0.88);
+}
+
+:root:not(.dark) .lock-title,
+:root:not(.dark) .admin-title,
+:root:not(.dark) .adm-msg-name,
+:root:not(.dark) .adm-msg-text {
+	color: rgb(0 0 0 / 0.85);
+}
+</style>
+
+<script is:inline define:vars={{ SUPABASE_URL, SUPABASE_KEY, ADMIN_PASSWORD }}>
+(function () {
+	const API = `${SUPABASE_URL}/rest/v1/guestbook`;
+	const HEADERS = {
+		apikey: SUPABASE_KEY,
+		Authorization: `Bearer ${SUPABASE_KEY}`,
+		"Content-Type": "application/json",
+	};
+	const SESSION_KEY = "gb_admin_auth";
+
+	const AVATAR_COLORS = [
+		"#e56d5a","#e5935a","#d4b84a","#66b85a","#5ab8a3",
+		"#5a91e5","#7b5ae5","#c05ae5","#e55ab1","#e55a6d",
+	];
+
+	function avatarColor(name) {
+		let h = 0;
+		for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+		return AVATAR_COLORS[h % AVATAR_COLORS.length];
+	}
+
+	function timeAgo(iso) {
+		const diff = Date.now() - new Date(iso).getTime();
+		const m = Math.floor(diff / 60000);
+		const h = Math.floor(m / 60);
+		const d = Math.floor(h / 24);
+		if (m < 1)  return "just now";
+		if (m < 60) return `${m}m ago`;
+		if (h < 24) return `${h}h ago`;
+		if (d < 30) return `${d}d ago`;
+		return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+	}
+
+	function escape(str) {
+		return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+	}
+
+	const threadCache = new Map();
+
+	async function fetchMessages() {
+		const res = await fetch(
+			`${API}?is_deleted=eq.false&order=created_at.desc&select=id,name,message,thread,created_at`,
+			{ headers: HEADERS }
+		);
+		if (!res.ok) throw new Error("fetch failed");
+		return res.json();
+	}
+
+	async function deleteMessage(id) {
+		const res = await fetch(`${API}?id=eq.${id}`, {
+			method: "PATCH",
+			headers: { ...HEADERS, Prefer: "return=minimal" },
+			body: JSON.stringify({ is_deleted: true }),
+		});
+		return res.ok;
+	}
+
+	async function appendAdminReply(id, content) {
+		const current = threadCache.get(String(id)) || [];
+		const updated = [...current, { role: "admin", name: "Rebiz", content, ts: new Date().toISOString() }];
+		const res = await fetch(`${API}?id=eq.${id}`, {
+			method: "PATCH",
+			headers: { ...HEADERS, Prefer: "return=minimal" },
+			body: JSON.stringify({ thread: updated }),
+		});
+		return res.ok;
+	}
+
+	function renderThread(thread) {
+		if (!thread || !thread.length) return "";
+		return `<div class="adm-thread">
+			${thread.map(t => `
+			<div class="adm-thread-msg adm-thread-msg--${t.role}">
+				<div class="adm-thread-meta">
+					<span class="adm-thread-author">${t.role === "admin" ? "✦ Rebiz (you)" : escape(t.name || "Anonymous")}</span>
+					<span class="adm-thread-time">${timeAgo(t.ts)}</span>
+				</div>
+				<div class="adm-thread-text">${escape(t.content)}</div>
+			</div>`).join("")}
+		</div>`;
+	}
+
+	function renderAdminCard(msg, idx) {
+		const initial = (msg.name || "?")[0].toUpperCase();
+		const color   = avatarColor(msg.name || "?");
+		const thread  = msg.thread || [];
+		threadCache.set(String(msg.id), thread);
+
+		return `
+		<div class="adm-msg-card" data-id="${msg.id}" style="animation-delay:${idx * 0.05}s">
+			<div class="adm-msg-top">
+				<div class="adm-avatar" style="background:${color}">${initial}</div>
+				<div class="adm-msg-content">
+					<div class="adm-msg-meta">
+						<span class="adm-msg-name">${escape(msg.name)}</span>
+						<span class="adm-msg-time">${timeAgo(msg.created_at)}</span>
+					</div>
+					<div class="adm-msg-text">${escape(msg.message)}</div>
+					${renderThread(thread)}
+				</div>
+				<div class="adm-msg-controls">
+					<button class="adm-btn adm-btn--ghost adm-reply-toggle" data-id="${msg.id}">↩ Reply</button>
+					<button class="adm-btn adm-btn--danger adm-delete" data-id="${msg.id}">🗑</button>
+				</div>
+			</div>
+
+			<div class="adm-reply-form" id="reply-form-${msg.id}">
+				<textarea class="adm-reply-textarea" rows="2" placeholder="Write a reply as Rebiz..."></textarea>
+				<div class="adm-reply-actions">
+					<button class="adm-btn adm-btn--ghost adm-reply-cancel" data-id="${msg.id}">Cancel</button>
+					<button class="adm-btn adm-btn--primary adm-reply-submit" data-id="${msg.id}">Send Reply</button>
+				</div>
+			</div>
+		</div>`;
+	}
+
+	async function loadMessages() {
+		const loading  = document.getElementById("adm-loading");
+		const wall     = document.getElementById("adm-messages");
+		const empty    = document.getElementById("adm-empty");
+		const countEl  = document.getElementById("admin-count");
+		if (!wall) return;
+
+		loading.style.display = "block";
+		wall.style.display    = "none";
+		empty.style.display   = "none";
+
+		try {
+			const msgs = await fetchMessages();
+			loading.style.display = "none";
+			countEl.textContent = `${msgs.length} message${msgs.length !== 1 ? "s" : ""}`;
+
+			if (!msgs.length) {
+				empty.style.display = "block";
+				return;
+			}
+
+			wall.innerHTML = msgs.map((m, i) => renderAdminCard(m, i)).join("");
+			wall.style.display = "flex";
+			attachHandlers();
+		} catch {
+			loading.style.display = "none";
+			empty.style.display = "block";
+			empty.textContent = "Failed to load messages.";
+		}
+	}
+
+	function attachHandlers() {
+		// Reply toggle
+		document.querySelectorAll(".adm-reply-toggle").forEach(btn => {
+			btn.addEventListener("click", () => {
+				const id   = btn.dataset.id;
+				const form = document.getElementById(`reply-form-${id}`);
+				form.classList.toggle("open");
+				if (form.classList.contains("open")) {
+					form.querySelector("textarea").focus();
+				}
+			});
+		});
+
+		// Reply cancel
+		document.querySelectorAll(".adm-reply-cancel").forEach(btn => {
+			btn.addEventListener("click", () => {
+				const id   = btn.dataset.id;
+				const form = document.getElementById(`reply-form-${id}`);
+				form.classList.remove("open");
+			});
+		});
+
+		// Reply submit
+		document.querySelectorAll(".adm-reply-submit").forEach(btn => {
+			btn.addEventListener("click", async () => {
+				const id   = btn.dataset.id;
+				const form = document.getElementById(`reply-form-${id}`);
+				const ta   = form.querySelector("textarea");
+				const reply = ta.value.trim();
+
+				if (!reply) return;
+
+				btn.disabled = true;
+				btn.textContent = "Sending...";
+
+				const ok = await appendAdminReply(id, reply);
+				if (ok) {
+					window.toast?.success("Reply sent!");
+					ta.value = "";
+					form.classList.remove("open");
+					await loadMessages();
+				} else {
+					window.toast?.error("Failed to send reply. Try again.");
+					btn.disabled = false;
+					btn.textContent = "Send Reply";
+				}
+			});
+		});
+
+		// Delete
+		document.querySelectorAll(".adm-delete").forEach(btn => {
+			btn.addEventListener("click", async () => {
+				const id   = btn.dataset.id;
+				const card = btn.closest(".adm-msg-card");
+
+				if (btn.dataset.confirm !== "1") {
+					btn.dataset.confirm = "1";
+					btn.textContent = "Sure? 🗑";
+					setTimeout(() => {
+						btn.dataset.confirm = "0";
+						btn.textContent = "🗑";
+					}, 3000);
+					return;
+				}
+
+				btn.disabled = true;
+				const ok = await deleteMessage(id);
+				if (ok) {
+					window.toast?.success("Message deleted.");
+					card.style.opacity = "0";
+					card.style.transform = "translateX(-8px)";
+					card.style.transition = "all 0.3s ease";
+					setTimeout(() => {
+						card.remove();
+						const wall = document.getElementById("adm-messages");
+						const countEl = document.getElementById("admin-count");
+						const remaining = wall.querySelectorAll(".adm-msg-card").length;
+						countEl.textContent = `${remaining} message${remaining !== 1 ? "s" : ""}`;
+						if (!remaining) {
+							wall.style.display = "none";
+							document.getElementById("adm-empty").style.display = "block";
+						}
+					}, 300);
+				} else {
+					window.toast?.error("Failed to delete. Try again.");
+					btn.disabled = false;
+					btn.textContent = "🗑";
+					btn.dataset.confirm = "0";
+				}
+			});
+		});
+	}
+
+	function showPanel() {
+		document.getElementById("admin-lock").style.display = "none";
+		document.getElementById("admin-panel").style.display = "block";
+		loadMessages();
+	}
+
+	function setupLock() {
+		// Check existing session
+		if (sessionStorage.getItem(SESSION_KEY) === "1") {
+			showPanel();
+			return;
+		}
+
+		const form    = document.getElementById("lock-form");
+		const pwdInput = document.getElementById("admin-pwd");
+		const errEl   = document.getElementById("lock-error");
+
+		form.addEventListener("submit", (e) => {
+			e.preventDefault();
+			if (pwdInput.value === ADMIN_PASSWORD) {
+				sessionStorage.setItem(SESSION_KEY, "1");
+				errEl.style.display = "none";
+				showPanel();
+			} else {
+				errEl.style.display = "block";
+				pwdInput.value = "";
+				pwdInput.focus();
+				pwdInput.style.borderColor = "oklch(60% 0.22 25)";
+				setTimeout(() => {
+					pwdInput.style.borderColor = "";
+				}, 1200);
+			}
+		});
+	}
+
+	function setupAdminControls() {
+		document.getElementById("admin-logout")?.addEventListener("click", () => {
+			sessionStorage.removeItem(SESSION_KEY);
+			location.reload();
+		});
+
+		document.getElementById("admin-refresh")?.addEventListener("click", () => {
+			loadMessages();
+		});
+	}
+
+	function init() {
+		setupLock();
+		setupAdminControls();
+	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", init);
+	} else {
+		init();
+	}
+
+	document.addEventListener("mizuki:page:loaded", init);
+})();
+</script>

@@ -1,0 +1,30 @@
+---
+import I18nKey from "../../../i18n/i18nKey";
+import { i18n } from "../../../i18n/translation";
+import { discordStatusConfig } from "../../../config";
+import WidgetLayout from "../common/WidgetLayout.astro";
+import DiscordStatusClient from "./DiscordStatusClient.svelte";
+import type { DiscordStatusWidgetProps } from "./types";
+
+const { class: className, style }: DiscordStatusWidgetProps = Astro.props;
+const widgetId = `discord-status-widget-${Math.random().toString(36).substring(2, 9)}`;
+---
+
+<WidgetLayout
+	id={widgetId}
+	class={className}
+	style={style}
+	name={i18n(I18nKey.discordStatus)}
+>
+	<DiscordStatusClient client:only="svelte" />
+</WidgetLayout>
+
+<script is:inline define:vars={{
+	discordUserId: discordStatusConfig.userId,
+	discordUseWebSocket: discordStatusConfig.useWebSocket ?? true
+}}>
+	window.__discordStatusConfig = {
+		userId: discordUserId,
+		useWebSocket: discordUseWebSocket
+	};
+</script>

@@ -1,0 +1,128 @@
+---
+import FloatingButton from "@components/common/FloatingButton.astro";
+---
+
+<div class="btt-ring-wrapper">
+	<!-- Scroll progress ring (SVG, positioned around the button) -->
+	<svg
+		id="scroll-ring-svg"
+		class="btt-ring-svg"
+		viewBox="0 0 100 100"
+		aria-hidden="true"
+		focusable="false"
+	>
+		<circle class="btt-ring-track" cx="50" cy="50" r="46" />
+		<circle id="scroll-ring-circle" class="btt-ring-fill" cx="50" cy="50" r="46" />
+	</svg>
+
+	<FloatingButton
+		id="back-to-top-btn"
+		icon="material-symbols:keyboard-arrow-up-rounded"
+		ariaLabel="Back to Top"
+		onclick="backToTop()"
+		class="hide"
+	/>
+</div>
+
+<style>
+.btt-ring-wrapper {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.btt-ring-svg {
+	position: absolute;
+	inset: -5px;
+	width: calc(100% + 10px);
+	height: calc(100% + 10px);
+	pointer-events: none;
+	transform: rotate(-90deg);
+	overflow: visible;
+	opacity: 0;
+	transition: opacity 0.4s ease;
+}
+
+.btt-ring-svg.visible {
+	opacity: 1;
+}
+
+.btt-ring-track {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 4;
+	opacity: 0.1;
+}
+
+.btt-ring-fill {
+	fill: none;
+	stroke: hsl(var(--hue, 30) 75% 58%);
+	stroke-width: 4;
+	stroke-linecap: round;
+	/* circumference of r=46 circle ≈ 289.03 */
+	stroke-dasharray: 289.03;
+	stroke-dashoffset: 289.03;
+	transition: stroke-dashoffset 0.15s linear;
+}
+</style>
+
+<script is:raw is:inline client:load>
+	function backToTop() {
+		window.scroll({ top: 0, behavior: "smooth" });
+	}
+
+	if (typeof window.BackToTopManager === "undefined") {
+		window.BackToTopManager = class BackToTopManager {
+			constructor() {
+				this.button = document.getElementById("back-to-top-btn");
+				this.ring   = document.getElementById("scroll-ring-circle");
+				this.ringSvg = document.getElementById("scroll-ring-svg");
+				this.CIRCUMFERENCE = 289.03;
+				this.init();
+			}
+
+			init() {
+				if (!this.button) return;
+				this.setupScrollListener();
+			}
+
+			updateRing(scrollTop) {
+				if (!this.ring || !this.ringSvg) return;
+				const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+				const progress = docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0;
+				this.ring.style.strokeDashoffset = this.CIRCUMFERENCE * (1 - progress);
+
+				// Show ring only when button is visible
+				if (scrollTop > 200) {
+					this.ringSvg.classList.add("visible");
+				} else {
+					this.ringSvg.classList.remove("visible");
+				}
+			}
+
+			setupScrollListener() {
+				const update = () => {
+					const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+					if (scrollTop > 200) {
+						this.button.classList.remove("hide");
+					} else {
+						this.button.classList.add("hide");
+					}
+					this.updateRing(scrollTop);
+				};
+
+				window.addEventListener("scroll", update, { passive: true });
+				update();
+			}
+		};
+	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", () => {
+			new window.BackToTopManager();
+		});
+	} else {
+		new window.BackToTopManager();
+	}
+</script>
