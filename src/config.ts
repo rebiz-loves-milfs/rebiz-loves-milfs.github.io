@@ -21,13 +21,13 @@ export const AUTHOR = {
 };
 
 export const LASTFM = {
-  user: 'reejit',
+  user: 'notrebiz',
   key: '92acdd128fb70e10fd1352df9334c22e',
 };
 
 export const DISCORD_USER_ID = '1296550727652610189';
 
-export const ANILIST_USER = 'notreejit';
+export const ANILIST_USER = 'rebiz';
 
 export const THEME = {
   defaultHue: 30,
