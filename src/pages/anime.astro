@@ -5,6 +5,7 @@ import Profile from '../components/widget/Profile.astro';
 import SiteStats from '../components/widget/SiteStats.astro';
 import LastFm from '../components/widget/LastFm.svelte';
 import AnimeList from '../components/AnimeList.svelte';
+import AniListStats from '../components/widget/AniListStats.svelte';
 import { ANILIST_USER } from '../config';
 ---
 
@@ -46,6 +47,7 @@ import { ANILIST_USER } from '../config';
     </aside>
 
     <main>
+      <AniListStats client:visible user={ANILIST_USER} full />
       <div class="card anime-wrap">
         <AnimeList client:load user={ANILIST_USER} />
       </div>

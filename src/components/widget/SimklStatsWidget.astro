@@ -1,0 +1,19 @@
+---
+// Build-time Simkl stats fetcher
+import { fetchSimklStats } from '../../data/simkl-fetch';
+import SimklStats from './SimklStats.svelte';
+
+interface Props {
+  full?: boolean;
+}
+
+const { full = false } = Astro.props;
+
+const stats = await fetchSimklStats();
+
+if (!stats) {
+  console.warn('Failed to fetch Simkl stats at build time');
+}
+---
+
+<SimklStats client:load {stats} {full} />

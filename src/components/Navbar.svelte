@@ -14,19 +14,13 @@
 
   onMount(() => {
     currentPath = window.location.pathname;
-    // transition:persist keeps this component alive; update active link on each navigation
-    const update = () => { currentPath = window.location.pathname; mobileOpen = false; };
-    document.addEventListener('astro:page-load', update);
-    return () => {
-      unsub1(); unsub2();
-      document.removeEventListener('astro:page-load', update);
-    };
+    return () => { unsub1(); unsub2(); };
   });
 
-  function isActive(path) {
+  $: isActive = (path) => {
     if (path === '/') return currentPath === '/' || currentPath.startsWith('/posts');
     return currentPath.startsWith(path);
-  }
+  };
 
   function switchTheme() {
     if (document.startViewTransition) {
@@ -59,7 +53,6 @@
         href={link.path}
         class="nav-link {isActive(link.path) ? 'active' : ''}"
         data-route={link.path.replace('/', '') || 'home'}
-        role="listitem"
       >
         <iconify-icon icon={link.icon} width="16" aria-hidden="true"></iconify-icon>
         {link.label}

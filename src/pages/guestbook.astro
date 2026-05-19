@@ -1,0 +1,338 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Banner from '../components/Banner.svelte';
+
+---
+
+<Layout pathname="/guestbook" title="Guestbook">
+  <Banner client:load compact title="Guestbook" subtitle="Leave a note ✦" />
+  <div class="gb-wrap">
+
+    <!-- Submission form -->
+    <section class="gb-form-section card">
+      <h2 class="gb-section-title">Sign the Guestbook</h2>
+      <p class="gb-section-sub">Say hi, share a thought, or just leave your mark.</p>
+
+      <div class="gb-success-msg gb-success-hidden" id="gb-success" aria-live="polite">
+        <iconify-icon icon="material-symbols:check-circle-outline" width="20"></iconify-icon>
+        Thanks for signing! Your entry will appear after moderation.
+      </div>
+
+      <form
+        name="guestbook"
+        method="POST"
+        data-netlify="true"
+        netlify-honeypot="bot-field"
+        class="gb-form"
+        id="gb-form"
+        novalidate
+      >
+        <input type="hidden" name="form-name" value="guestbook" />
+        <p hidden>
+          <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+        </p>
+
+        <div class="gb-fields">
+          <div class="gb-field">
+            <label for="gb-name" class="gb-label">Name <span class="gb-required">*</span></label>
+            <input
+              type="text"
+              id="gb-name"
+              name="name"
+              required
+              autocomplete="name"
+              class="gb-input"
+              placeholder="Your name"
+            />
+          </div>
+
+          <div class="gb-field">
+            <label for="gb-website" class="gb-label">Website <span class="gb-optional">(optional)</span></label>
+            <input
+              type="url"
+              id="gb-website"
+              name="website"
+              autocomplete="url"
+              class="gb-input"
+              placeholder="https://yoursite.com"
+            />
+          </div>
+        </div>
+
+        <div class="gb-field">
+          <div class="gb-textarea-header">
+            <label for="gb-message" class="gb-label">Message <span class="gb-required">*</span></label>
+            <span class="gb-char-count" id="gb-char-count">0 / 280</span>
+          </div>
+          <textarea
+            id="gb-message"
+            name="message"
+            required
+            maxlength="280"
+            rows="4"
+            class="gb-input gb-textarea"
+            placeholder="Say something..."
+          ></textarea>
+        </div>
+
+        <button type="submit" class="gb-submit">
+          <iconify-icon icon="material-symbols:send" width="15"></iconify-icon>
+          Sign Guestbook
+        </button>
+      </form>
+    </section>
+
+    <!-- Entries -->
+    <section class="gb-entries-section">
+      <div class="gb-entries-header">
+        <span class="gb-entries-title">Entries</span>
+        <span class="gb-entries-note">Entries appear here after moderation</span>
+      </div>
+
+      <div class="gb-empty-state">
+        <iconify-icon icon="material-symbols:rate-review-outline" width="32"></iconify-icon>
+        <p>No entries yet — be the first to sign!</p>
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<script>
+  const textarea = document.getElementById('gb-message');
+  const counter  = document.getElementById('gb-char-count');
+  const form     = document.getElementById('gb-form');
+  const success  = document.getElementById('gb-success');
+
+  if (textarea && counter) {
+    textarea.addEventListener('input', () => {
+      const len = textarea.value.length;
+      counter.textContent = `${len} / 280`;
+      counter.classList.toggle('gb-char-warn', len >= 250);
+    });
+  }
+
+  if (form && success) {
+    form.addEventListener('submit', async (e) => {
+      // Let Netlify handle the POST, but show success UI if JS is available
+      // Netlify redirects by default; to show inline success we intercept
+      e.preventDefault();
+      try {
+        const data = new FormData(form);
+        await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams(data).toString(),
+        });
+        form.hidden = true;
+        success.classList.remove('gb-success-hidden');
+      } catch {
+        // If fetch fails, fall back to native form submission
+        form.submit();
+      }
+    });
+  }
+</script>
+
+<style>
+  .gb-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 0 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  /* Form section */
+  .gb-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .gb-section-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--fg-1);
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+
+  .gb-section-sub {
+    font-size: 13.5px;
+    color: var(--fg-3);
+    margin: 0 0 20px;
+    line-height: 1.5;
+  }
+
+  .gb-success-hidden { display: none !important; }
+
+  .gb-success-msg {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    background: oklch(0.92 0.06 145);
+    border: 1px solid oklch(0.72 0.12 145 / 0.4);
+    border-radius: 0.75rem;
+    color: oklch(0.38 0.12 145);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  .dark .gb-success-msg {
+    background: oklch(0.28 0.06 145);
+    color: oklch(0.80 0.12 145);
+    border-color: oklch(0.50 0.12 145 / 0.4);
+  }
+
+  .gb-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .gb-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .gb-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .gb-textarea-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .gb-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--fg-2);
+    letter-spacing: 0.01em;
+  }
+
+  .gb-required {
+    color: var(--primary);
+    font-size: 11px;
+  }
+
+  .gb-optional {
+    font-size: 10px;
+    color: var(--fg-4);
+    font-weight: 400;
+  }
+
+  .gb-char-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-4);
+  }
+
+  .gb-char-count.gb-char-warn {
+    color: oklch(0.62 0.18 45);
+  }
+
+  .gb-input {
+    padding: 10px 14px;
+    background: var(--btn-regular-bg);
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    font-size: 14px;
+    color: var(--fg-1);
+    font-family: var(--font-display);
+    outline: none;
+    transition: border-color 150ms, box-shadow 150ms;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .gb-input::placeholder {
+    color: var(--fg-4);
+  }
+
+  .gb-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px oklch(0.70 0.15 var(--hue) / 0.15);
+  }
+
+  .gb-textarea {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.6;
+  }
+
+  .gb-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    font-size: 14px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 150ms, transform 100ms;
+    align-self: flex-start;
+    box-shadow: 0 4px 12px oklch(0.70 0.15 var(--hue) / 0.3);
+  }
+
+  .gb-submit:hover {
+    background: oklch(0.62 0.18 var(--hue));
+    transform: translateY(-1px);
+  }
+
+  /* Entries */
+  .gb-entries-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .gb-entries-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-3);
+  }
+
+  .gb-entries-note {
+    font-size: 11px;
+    color: var(--fg-4);
+    font-family: var(--font-mono);
+    font-style: italic;
+  }
+
+  .gb-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 48px 24px;
+    color: var(--fg-4);
+    font-size: 14px;
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-large);
+  }
+  .gb-empty-state p { margin: 0; }
+
+  /* Responsive */
+  @media (max-width: 560px) {
+    .gb-fields {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

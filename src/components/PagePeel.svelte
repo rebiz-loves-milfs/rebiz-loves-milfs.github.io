@@ -3,10 +3,34 @@
 
   const CHARS = '0123456789ABCDEF日ﾊﾋﾌﾍﾎｦｧｨｩｪｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ<>{}[]|/\\;:';
   const FS = 13;
+  const CORNERS = ['br', 'bl', 'tr', 'tl'];
+
+  // Per-corner: CSS position + parent transform
+  const CORNER_POS = {
+    br: 'bottom:0;right:0;',
+    bl: 'bottom:0;left:0;',
+    tr: 'top:0;right:0;',
+    tl: 'top:0;left:0;',
+  };
+  // Transform applied to peel-wrap to flip the triangle for each corner
+  const CORNER_XFORM = {
+    br: '',
+    bl: 'scaleX(-1)',
+    tr: 'scaleY(-1)',
+    tl: 'scaleX(-1) scaleY(-1)',
+  };
+  // Counter-transform for the label so text stays readable
+  const LABEL_XFORM = {
+    br: '',
+    bl: 'scaleX(-1)',
+    tr: 'scaleY(-1)',
+    tl: 'scaleX(-1) scaleY(-1)',
+  };
 
   let canvas, ctx;
-  let peelSize = 20;   // minimum = visible dog-ear hint
+  let peelSize = 20;
   let peeling = false;
+  let corner = 'br';
   let drops = [];
   let mRaf, pRaf, scheduleTid, repairTid;
 
@@ -50,16 +74,22 @@
     pRaf = requestAnimationFrame(step);
   }
 
-  function triggerPeel() {
+  function triggerPeel(c) {
     if (peeling) return;
+    corner = c ?? CORNERS[Math.floor(Math.random() * CORNERS.length)];
     peeling = true;
     window.__nx7_peelActive = true;
+    window.__nx7_peelCorner = corner;
     const S = Math.min(window.innerWidth, window.innerHeight) * 0.30;
-    if (canvas) { canvas.width = Math.round(S); canvas.height = Math.round(S); initMatrix(canvas.width, canvas.height); }
+    if (canvas) {
+      canvas.width = Math.round(S);
+      canvas.height = Math.round(S);
+      initMatrix(canvas.width, canvas.height);
+    }
     cancelAnimationFrame(mRaf);
-    drawMatrix(canvas.width, canvas.height);
+    drawMatrix(canvas?.width ?? 200, canvas?.height ?? 200);
     animPeel(S, () => {
-      window.dispatchEvent(new CustomEvent('nx7-peel-start'));
+      window.dispatchEvent(new CustomEvent('nx7-peel-start', { detail: { corner } }));
       repairTid = setTimeout(repairPeel, 7000);
     });
   }
@@ -70,6 +100,7 @@
     animPeel(20, () => {
       peeling = false;
       window.__nx7_peelActive = false;
+      window.__nx7_peelCorner = null;
       if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height);
       window.dispatchEvent(new CustomEvent('nx7-peel-end'));
     });
@@ -94,39 +125,44 @@
       delete window.__nx7_triggerPeel;
       delete window.__nx7_repairPeel;
       delete window.__nx7_peelActive;
+      delete window.__nx7_peelCorner;
     };
   });
+
+  $: wrapStyle = `width:${peelSize}px;height:${peelSize}px;${CORNER_POS[corner]}transform:${CORNER_XFORM[corner]};transform-origin:${
+    corner === 'br' ? 'bottom right' :
+    corner === 'bl' ? 'bottom left' :
+    corner === 'tr' ? 'top right' : 'top left'
+  };`;
 </script>
 
-<!-- Hover zone: always-present, triggers peel on hover -->
-<div
-  class="peel-trigger"
-  role="presentation"
-  on:mouseenter={() => { if (!peeling) triggerPeel(); }}
-></div>
+<!-- Hover trigger zones at all 4 corners -->
+{#each CORNERS as c}
+  <div
+    class="peel-trigger"
+    style={CORNER_POS[c]}
+    role="presentation"
+    on:mouseenter={() => { if (!peeling) triggerPeel(c); }}
+  ></div>
+{/each}
 
-<!-- The visual peel: sized to peelSize -->
-<div class="peel-wrap" style="width:{peelSize}px;height:{peelSize}px">
-  <!-- Matrix revealed beneath -->
+<!-- The visual peel -->
+<div class="peel-wrap" style={wrapStyle}>
   <div class="peel-matrix">
     <canvas bind:this={canvas} style="width:{peelSize}px;height:{peelSize}px"></canvas>
   </div>
-  <!-- Folded page surface -->
   <div class="peel-fold"></div>
-  <!-- Diagonal crease line -->
   <svg class="peel-crease" viewBox="0 0 100 100" preserveAspectRatio="none">
     <line x1="100" y1="0" x2="0" y2="100" stroke="rgba(0,0,0,0.18)" stroke-width="1.5"/>
   </svg>
-  <!-- Corner flash text when fully peeled -->
   {#if peelSize > 100}
-    <div class="peel-label">REALITY.EXE</div>
+    <div class="peel-label" style="transform:{LABEL_XFORM[corner]}">REALITY.EXE</div>
   {/if}
 </div>
 
 <style>
   .peel-trigger {
     position: fixed;
-    bottom: 0; right: 0;
     width: 48px; height: 48px;
     z-index: 181;
     cursor: pointer;
@@ -135,7 +171,6 @@
 
   .peel-wrap {
     position: fixed;
-    bottom: 0; right: 0;
     z-index: 180;
     pointer-events: none;
     min-width: 20px; min-height: 20px;
@@ -177,6 +212,7 @@
     pointer-events: none;
     opacity: 0.85;
     animation: peel-flicker 0.8s steps(2) infinite;
+    transform-origin: bottom right;
   }
 
   @keyframes peel-flicker {

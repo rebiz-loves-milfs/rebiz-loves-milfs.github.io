@@ -1,6 +1,11 @@
 ---
 import '../styles/tokens.css';
-import '../styles/kit.css';
+import '../styles/layout.css';
+import '../styles/components.css';
+import '../styles/widgets.css';
+import '../styles/nx7.css';
+import '../styles/animations.css';
+import '../styles/mobile.css';
 import { ClientRouter } from 'astro:transitions';
 import Navbar from '../components/Navbar.svelte';
 import Footer from '../components/Footer.astro';
@@ -12,6 +17,8 @@ import SearchModal from '../components/SearchModal.svelte';
 import PagePeel from '../components/PagePeel.svelte';
 import Terminal from '../components/Terminal.svelte';
 import CursorTrail from '../components/CursorTrail.svelte';
+import AtmosphereLoop from '../components/AtmosphereLoop.svelte';
+import TypingSFX from '../components/TypingSFX.svelte';
 import { SITE, THEME, AUTHOR } from '../config';
 import { getSortedPosts } from '../utils/content-utils';
 
@@ -66,17 +73,22 @@ const searchPosts = allPosts.map(p => ({
   <ClientRouter />
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
   <script define:vars={{ defaultHue: THEME.defaultHue }}>
-    const d = localStorage.getItem('dark') === 'true';
-    const h = parseInt(localStorage.getItem('hue') ?? defaultHue, 10) || defaultHue;
-    document.documentElement.classList.toggle('dark', d);
-    document.documentElement.style.setProperty('--hue', String(h));
+    function applyTheme() {
+      const d = localStorage.getItem('dark') === 'true';
+      const h = parseInt(localStorage.getItem('hue') ?? defaultHue, 10) || defaultHue;
+      document.documentElement.classList.toggle('dark', d);
+      document.documentElement.style.setProperty('--hue', String(h));
+    }
+    applyTheme();
+    // Re-apply after every client-side navigation swap so dark mode survives tab changes
+    document.addEventListener('astro:after-swap', applyTheme);
   </script>
 </head>
 <body>
   <div class="shell">
     <PageProgress client:load transition:persist />
     <Sakura />
-    <Navbar client:load transition:persist />
+    <Navbar client:load />
     <SearchModal client:load posts={searchPosts} />
     <div class="page-wrap">
       <slot />
@@ -87,6 +99,8 @@ const searchPosts = allPosts.map(p => ({
     <PagePeel client:only="svelte" transition:persist="pagepeel" />
     <Terminal client:only="svelte" transition:persist="terminal" />
     <CursorTrail client:only="svelte" transition:persist="cursortrail" />
+    <AtmosphereLoop client:only="svelte" transition:persist="atmosphere" />
+    <TypingSFX client:only="svelte" transition:persist="typingsfx" />
   </div>
   <script>
     // Konami code → matrix chaos

@@ -51,9 +51,16 @@ export const GISCUS = {
   categoryId: '',    // from giscus.app
 };
 
+export const SIMKL = {
+  user: '8389247',
+  clientId: '3b8da8bc2ff9ffc4ca420fdd1258b9375e82cfb070e72dd8c4340c65f1a05188',
+};
+
 export const NAV_LINKS = [
-  { path: '/',        label: 'Home',    icon: 'material-symbols:home' },
-  { path: '/archive', label: 'Archive', icon: 'material-symbols:archive' },
-  { path: '/anime',   label: 'Anime',   icon: 'material-symbols:movie' },
-  { path: '/about',   label: 'About',   icon: 'material-symbols:info' },
+  { path: '/',           label: 'Home',      icon: 'material-symbols:home' },
+  { path: '/archive',    label: 'Archive',   icon: 'material-symbols:archive' },
+  { path: '/anime',      label: 'Anime',     icon: 'material-symbols:tv-gen' },
+  { path: '/movies',     label: 'Movies',    icon: 'material-symbols:movie' },
+  { path: '/guestbook',  label: 'Guestbook', icon: 'material-symbols:edit-note' },
+  { path: '/about',      label: 'About',     icon: 'material-symbols:info' },
 ];

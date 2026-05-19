@@ -1,0 +1,184 @@
+---
+import { getSortedPosts, formatDate, slugify } from '../utils/content-utils';
+
+interface Props {
+  currentId: string;
+  tags: string[];
+  category: string;
+}
+
+const { currentId, tags, category } = Astro.props;
+
+const allPosts = await getSortedPosts();
+
+const scored = allPosts
+  .filter(p => p.id !== currentId)
+  .map(p => {
+    let score = 0;
+    for (const t of tags) {
+      if (p.data.tags.includes(t)) score += 2;
+    }
+    if (category && p.data.category === category) score += 3;
+    return { post: p, score };
+  })
+  .filter(x => x.score > 0)
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 4);
+
+const related = scored.map(x => x.post);
+---
+
+{related.length >= 2 && (
+  <section class="rp-section">
+    <div class="rp-header">
+      <span class="rp-title">Related Posts</span>
+    </div>
+    <div class="rp-grid">
+      {related.map(post => (
+        <a href={`/posts/${post.id}`} class="rp-card" data-astro-prefetch>
+          <div class="rp-media">
+            {post.data.image
+              ? <img src={post.data.image} alt={post.data.title} loading="lazy" class="rp-img" />
+              : <div class="rp-gradient" style={post.data.gradient
+                  ? `background:${post.data.gradient}`
+                  : 'background:var(--primary-soft)'}>
+                  <span class="rp-glyph">{post.data.glyph || '✦'}</span>
+                </div>
+            }
+          </div>
+          <div class="rp-body">
+            {post.data.category && (
+              <span class="rp-cat">{post.data.category}</span>
+            )}
+            <h3 class="rp-post-title">{post.data.title}</h3>
+            <time class="rp-date" datetime={post.data.published.toISOString()}>
+              {formatDate(post.data.published)}
+            </time>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+)}
+
+<style>
+  .rp-section {
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+
+  .rp-header {
+    margin-bottom: 16px;
+  }
+
+  .rp-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--fg-3);
+  }
+
+  .rp-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .rp-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-large);
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    overflow: hidden;
+    text-decoration: none;
+    transition: border-color 150ms, transform 150ms, box-shadow 150ms;
+  }
+
+  .rp-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .rp-media {
+    width: 100%;
+    height: 80px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .rp-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .rp-card:hover .rp-img {
+    transform: scale(1.05);
+  }
+
+  .rp-gradient {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .rp-glyph {
+    font-size: 28px;
+    opacity: 0.6;
+  }
+
+  .rp-body {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+  }
+
+  .rp-cat {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--primary);
+  }
+
+  .rp-post-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--fg-1);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 150ms;
+  }
+
+  .rp-card:hover .rp-post-title {
+    color: var(--primary);
+  }
+
+  .rp-date {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-4);
+    margin-top: auto;
+  }
+
+  @media (max-width: 480px) {
+    .rp-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

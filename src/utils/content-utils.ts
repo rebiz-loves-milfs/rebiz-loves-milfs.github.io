@@ -86,6 +86,17 @@ export function formatDate(date: Date): string {
   });
 }
 
+export function formatDateTime(date: Date): string {
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 export function groupPostsByYear(posts: Post[]): Map<number, Post[]> {
   const map = new Map<number, Post[]>();
   for (const post of posts) {

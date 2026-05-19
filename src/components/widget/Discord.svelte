@@ -5,6 +5,7 @@
   let state = 'loading';
   let status = 'online';
   let username = 'rebiz';
+  let displayName = '';
   let avatar = null;
   let customStatus = '';
   let activity = null;
@@ -25,6 +26,7 @@
         const d = json.data;
         status = d.discord_status ?? 'online';
         username = d.discord_user?.username ?? 'rebiz';
+        displayName = d.discord_user?.global_name ?? d.discord_user?.display_name ?? '';
         if (d.discord_user?.avatar)
           avatar = `https://cdn.discordapp.com/avatars/${DISCORD_USER_ID}/${d.discord_user.avatar}.png?size=64`;
         customStatus = d.activities?.find(a => a.type === 4)?.state ?? '';
@@ -75,14 +77,14 @@
         ></span>
       </div>
       <div style="min-width:0;flex:1">
-        <div class="dc-name">@{username}</div>
+        <div class="dc-name">{displayName || username}</div>
         <div class="dc-status">
           {#if customStatus}
             {customStatus}
           {:else if activity?.name}
             playing {activity.name}
           {:else}
-            <span class="dc-status-text">{statusLabel[status] ?? status}</span>
+            {statusLabel[status] ?? status}
           {/if}
         </div>
       </div>

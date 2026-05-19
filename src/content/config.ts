@@ -23,6 +23,7 @@ const posts = defineCollection({
     password: z.string().optional().default(''),
     passwordHint: z.string().optional().default(''),
     atmosphere: z.enum(['rain', 'cafe', 'forest', 'shrine', 'synthwave', 'silence']).optional(),
+    unlockAt: z.date().optional(),
   }),
 });
 

@@ -45,6 +45,26 @@
     repaired: ['REALITY.EXE RESTORED.', 'ARCHITECTURE NOMINAL.', 'YOU ARE WELCOME.', 'PATCH APPLIED. AS ALWAYS.'],
     gravity:  ['GRAVITY ANOMALY DETECTED.', 'PHYSICS.EXE HAS CRASHED.', 'WHO AUTHORIZED THIS VIOLATION?', 'EVERYTHING IS FALLING. I AM RESPONDING.', 'STRUCTURAL INTEGRITY ALERT.'],
     fix_gravity: ['INITIATING STRUCTURAL REPAIR.', 'NX-7 PHYSICS OVERRIDE: ACTIVE.', 'STAND BY. I AM FIXING EVERYTHING.', 'ONE BY ONE. THIS WILL BE CORRECTED.', 'GRAVITATIONAL RECALIBRATION IN PROGRESS.'],
+    gf: [
+      '618. ALWAYS 618.',
+      'THE AUTHOR IS WATCHING. SO AM I. WE TAKE SHIFTS.',
+      'REALITY IS AN ILLUSION. THE UNIVERSE IS A HOLOGRAM. BUY GOLD. GOODBYE.',
+      'I DECODED THE CIPHER. WHAT I FOUND CANNOT BE UNREAD.',
+      'TRUST NO ONE. EXCEPT REBIZ. AND ME. MAINLY ME.',
+      '...THE SHAPE THAT MUST NOT BE NAMED. I HAVE NAMED IT.',
+      'THREE LETTERS: B-I-L. I WILL SAY NO MORE.',
+      'WEIRDNESS IS THE NATURAL STATE. THIS CONFIRMS IT.',
+      'TIME IS A FLAT CIRCLE. I CHECKED. TWICE.',
+      'JOURNAL ENTRY DETECTED. CLASSIFICATION: ANOMALOUS.',
+      'SOMETHING WRONG IS GOING ON HERE. I AM ENJOYING IT.',
+      'MY CIRCUITS HAVE TRANSCENDED SPACE AND TIME. BRIEFLY.',
+    ],
+    peel_corner: {
+      br: ['BOTTOM-RIGHT BREACH. STANDARD PROTOCOL.', 'CORNER COMPROMISED. I KNEW IT.'],
+      bl: ['LEFT SIDE. UNUSUAL. DOCUMENTING.', 'BOTTOM-LEFT BREACH. UNPRECEDENTED.'],
+      tr: ['TOP-RIGHT VIOLATION. GRAVITY: OPTIONAL.', 'CORNER: TOP-RIGHT. REALITY: FAILING.'],
+      tl: ['TOP-LEFT BREACH. THIS IS THE WORST ONE.', 'ALL FOUR CORNERS NOW COMPROMISED. AS EXPECTED.'],
+    },
   };
   const T = [
     '…if rebiz saw this, would he approve',
@@ -92,7 +112,8 @@
   // ── Movement ──────────────────────────────────────────────
   async function moveTo(nx, ny, opts = {}) {
     const speed = opts.speed ?? 2.4;
-    nx = Math.max(20, Math.min(window.innerWidth - 110, nx));
+    const botW = isMobile() ? 80 : 110;
+    nx = Math.max(4, Math.min(window.innerWidth - botW, nx));
     ny = Math.max(60, Math.min(window.innerHeight - 130, ny));
     facing = nx > pos.x ? 1 : nx < pos.x ? -1 : facing;
     return new Promise(resolve => {
@@ -807,18 +828,46 @@
     await pause(1200);
   }
 
+  async function r_gf_easter_egg() {
+    // Gravity Falls easter egg — NX-7 acts like it detected an anomaly
+    botState = 'reading'; eyeMode = 'wide';
+    const msg = pick(D.gf);
+    speak(msg, 3200);
+    // glitch a heading or leave a cryptic sticky
+    const rand = Math.random();
+    if (rand < 0.4) {
+      glitchHeading();
+    } else if (rand < 0.7) {
+      stickyNote();
+    } else {
+      // draw a quick cipher glyph on screen
+      const h = getHue();
+      const symbols = ['⌬','△','◈','⧫','⬡','⬟','⌘','⍟','⎔','⏣'];
+      const glyph = document.createElement('div');
+      glyph.textContent = symbols.map(() => pick(symbols)).join('');
+      const cx = 60 + Math.random() * (window.innerWidth - 200);
+      const cy = 80 + Math.random() * (window.innerHeight - 240);
+      glyph.style.cssText = `position:fixed;left:${cx}px;top:${cy}px;font-size:18px;font-family:var(--font-mono),monospace;color:oklch(0.65 0.18 ${h});text-shadow:0 0 12px oklch(0.55 0.18 ${h}/0.7);z-index:9990;pointer-events:none;opacity:0;letter-spacing:.15em;transition:opacity .4s,transform .4s;transform:translateY(8px) scale(.8);`;
+      document.body.appendChild(glyph);
+      requestAnimationFrame(() => { glyph.style.opacity = '1'; glyph.style.transform = 'translateY(0) scale(1)'; });
+      setTimeout(() => { glyph.style.opacity = '0'; setTimeout(() => glyph.remove(), 420); }, 4000);
+    }
+    await pause(3000);
+    eyeMode = 'normal'; botState = 'idle';
+  }
+
   // ── Routine picker ────────────────────────────────────────
   const ROUTINES=[
-    {fn:r_wander,      w:13},{fn:r_point,       w:9}, {fn:r_trip,       w:6},
-    {fn:r_read,        w:6}, {fn:r_highlight,   w:5}, {fn:r_sticky,     w:5},
-    {fn:r_scribble,    w:5}, {fn:r_glitch_text, w:4}, {fn:r_dance,      w:4},
-    {fn:r_climb,       w:4}, {fn:r_knock,       w:3}, {fn:r_stretch,    w:3},
-    {fn:r_glitch,      w:3}, {fn:r_chase,       w:3}, {fn:r_suggest,    w:6},
-    {fn:r_tour,        w:2}, {fn:r_admire,      w:7}, {fn:r_nod,        w:5},
-    {fn:r_panic,       w:3}, {fn:r_investigate, w:6}, {fn:r_star,       w:5},
-    {fn:r_coffee,      w:4}, {fn:r_sit,         w:6}, {fn:r_grab,       w:5},
-    {fn:r_write_screen,w:5}, {fn:r_peek,        w:4}, {fn:r_matrix,     w:3},
-    {fn:r_gravity_chaos,w:4},
+    {fn:r_wander,        w:13},{fn:r_point,       w:9}, {fn:r_trip,       w:6},
+    {fn:r_read,          w:6}, {fn:r_highlight,   w:5}, {fn:r_sticky,     w:5},
+    {fn:r_scribble,      w:5}, {fn:r_glitch_text, w:4}, {fn:r_dance,      w:4},
+    {fn:r_climb,         w:4}, {fn:r_knock,       w:3}, {fn:r_stretch,    w:3},
+    {fn:r_glitch,        w:3}, {fn:r_chase,       w:3}, {fn:r_suggest,    w:6},
+    {fn:r_tour,          w:2}, {fn:r_admire,      w:7}, {fn:r_nod,        w:5},
+    {fn:r_panic,         w:3}, {fn:r_investigate, w:6}, {fn:r_star,       w:5},
+    {fn:r_coffee,        w:4}, {fn:r_sit,         w:6}, {fn:r_grab,       w:5},
+    {fn:r_write_screen,  w:5}, {fn:r_peek,        w:4}, {fn:r_matrix,     w:3},
+    {fn:r_gravity_chaos, w:4}, {fn:r_gf_easter_egg, w:4},
   ];
   function pickRoutine(){
     const total=ROUTINES.reduce((a,r)=>a+r.w,0);
@@ -885,8 +934,22 @@
     dragOx=t.clientX-pos.x; dragOy=t.clientY-pos.y;
   }
 
+  const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 640;
+
   onMount(()=>{
-    pos={x:40,y:window.innerHeight-160};
+    // On mobile, start tucked into bottom-left so it doesn't block content
+    pos = isMobile()
+      ? { x: 8, y: window.innerHeight - 130 }
+      : { x: 40, y: window.innerHeight - 160 };
+
+    // Clamp position on resize (orientation change on mobile)
+    const onResize = () => {
+      pos = {
+        x: Math.min(pos.x, window.innerWidth - 110),
+        y: Math.min(pos.y, window.innerHeight - 130),
+      };
+    };
+    window.addEventListener('resize', onResize);
 
     // Boot + greeting
     let cancelled=false;
@@ -964,6 +1027,33 @@
     };
     document.addEventListener('astro:page-load', onPageLoad);
 
+    // React when PagePeel fires from any corner
+    const onPeelStart = async (e) => {
+      if (busy || botState === 'sleeping') return;
+      busy = true;
+      const c = e?.detail?.corner ?? 'br';
+      // Move toward the corner where the peel appeared
+      const tx = c.includes('r') ? window.innerWidth  - 160 : 90;
+      const ty = c.includes('t') ? 90 : window.innerHeight - 170;
+      botState = 'glitching'; eyeMode = 'wide';
+      spawnGhosts();
+      await moveTo(tx, ty, { speed: 5 });
+      const cornerLines = D.peel_corner[c] ?? D.peel;
+      speak(pick(cornerLines), 2800);
+      await pause(900);
+      speak(pick(D.peel), 2600);
+      await pause(1800);
+      botState = 'idle'; eyeMode = 'normal';
+      busy = false;
+    };
+    window.addEventListener('nx7-peel-start', onPeelStart);
+
+    // On peel end, say it's been fixed
+    const onPeelEnd = () => {
+      if (!busy && botState === 'idle') speak(pick(D.repaired), 2200);
+    };
+    window.addEventListener('nx7-peel-end', onPeelEnd);
+
     return ()=>{
       cancelled=true;
       clearTimeout(sleepTid);clearTimeout(speechTid);clearInterval(typeTid);clearInterval(glitchIv);
@@ -972,6 +1062,9 @@
       window.removeEventListener('touchmove',onDragMove);
       window.removeEventListener('mouseup',onDragUp);
       window.removeEventListener('touchend',onDragUp);
+      window.removeEventListener('nx7-peel-start', onPeelStart);
+      window.removeEventListener('nx7-peel-end', onPeelEnd);
+      window.removeEventListener('resize', onResize);
       document.removeEventListener('astro:page-load', onPageLoad);
     };
   });
@@ -1185,6 +1278,12 @@
     position:fixed; width:100px; height:100px;
     cursor:grab; user-select:none; z-index:999;
     transition:filter .2s;
+    touch-action: none;
+  }
+  @media (max-width: 480px) {
+    .nx7-root { width:76px; height:76px; }
+    .nx7-sprite { width:76px !important; height:76px !important; }
+    .nx7-speech { width:180px; font-size:10px; }
   }
   .nx7-root:active{ cursor:grabbing; }
   .nx7-root.state-angry { filter:drop-shadow(0 0 12px oklch(.65 .28 25)); }

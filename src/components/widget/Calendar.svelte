@@ -105,6 +105,7 @@
       {@const hasPost = dayPosts.length > 0}
       {@const isToday = isCurrentMonth && d === todayDate}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
       <div
         class="cal-d"
         class:has={hasPost}

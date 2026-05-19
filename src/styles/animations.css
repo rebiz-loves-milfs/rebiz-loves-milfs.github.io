@@ -1,0 +1,84 @@
+/* ui_kits/mizuki-blog/animations.css — all @keyframes animations */
+
+/* View Transitions API for theme switch */
+::view-transition-old(root), ::view-transition-new(root) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(.4,0,.2,1);
+}
+
+/* Sidebar widget onload stagger */
+.sidebar > * {
+  animation: nx7-widget-in 180ms cubic-bezier(.4,0,.2,1) backwards;
+}
+.sidebar > *:nth-child(1) { animation-delay:   0ms; }
+.sidebar > *:nth-child(2) { animation-delay:  25ms; }
+.sidebar > *:nth-child(3) { animation-delay:  50ms; }
+.sidebar > *:nth-child(4) { animation-delay:  75ms; }
+.sidebar > *:nth-child(5) { animation-delay: 100ms; }
+.sidebar > *:nth-child(6) { animation-delay: 125ms; }
+.sidebar > *:nth-child(7) { animation-delay: 150ms; }
+.sidebar > *:nth-child(8) { animation-delay: 175ms; }
+@keyframes nx7-widget-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Post-card stagger inside post list */
+.post-item {
+  animation: nx7-widget-in 200ms cubic-bezier(.4,0,.2,1) backwards;
+}
+.post-item:nth-child(1) { animation-delay:  50ms; }
+.post-item:nth-child(2) { animation-delay:  90ms; }
+.post-item:nth-child(3) { animation-delay: 130ms; }
+.post-item:nth-child(4) { animation-delay: 170ms; }
+.post-item:nth-child(5) { animation-delay: 210ms; }
+.post-item:nth-child(6) { animation-delay: 250ms; }
+
+/* Anime tile stagger */
+.anime-tile {
+  animation: nx7-widget-in 280ms cubic-bezier(.4,0,.2,1) backwards;
+}
+.anime-tile:nth-child(2) { animation-delay: 40ms; }
+.anime-tile:nth-child(3) { animation-delay: 80ms; }
+.anime-tile:nth-child(4) { animation-delay: 120ms; }
+.anime-tile:nth-child(5) { animation-delay: 160ms; }
+.anime-tile:nth-child(6) { animation-delay: 200ms; }
+.anime-tile:nth-child(7) { animation-delay: 240ms; }
+.anime-tile:nth-child(8) { animation-delay: 280ms; }
+.anime-tile:nth-child(9) { animation-delay: 320ms; }
+.anime-tile:nth-child(10) { animation-delay: 360ms; }
+.anime-tile:nth-child(11) { animation-delay: 400ms; }
+.anime-tile:nth-child(12) { animation-delay: 440ms; }
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .page-wrap, .sidebar > *, .post-item, .anime-tile, .nx7-sprite {
+    animation: none !important; transition: none !important;
+  }
+}
+
+/* AniList loading skeleton animations */
+.anime-cover.sk, .lfm-cover.sk, .sk, .sk-line {
+  background: linear-gradient(90deg, var(--btn-regular-bg) 0%, var(--btn-regular-bg-hover) 50%, var(--btn-regular-bg) 100%);
+  background-size: 200% 100%;
+  animation: skim 1s ease-in-out infinite;
+}
+.sk-line { height: 13px; border-radius: 0.4rem; }
+@keyframes skim { 0% { background-position: -100% 0; } 100% { background-position: 100% 0; } }
+@keyframes sk-reveal {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Watching indicator pulse */
+.watching-dot {
+  position: absolute; bottom: 8px; left: 8px;
+  width: 10px; height: 10px; border-radius: 999px;
+  background: oklch(0.65 0.18 145); border: 2px solid white;
+  box-shadow: 0 0 0 0 oklch(0.65 0.18 145 / 0.5);
+  animation: pulseDot 1.8s ease-out infinite;
+}
+@keyframes pulseDot {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.65 0.18 145 / 0.5); }
+  50%      { box-shadow: 0 0 0 6px oklch(0.65 0.18 145 / 0); }
+}
