@@ -1,0 +1,42 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Banner from '../../components/Banner.svelte';
+import Profile from '../../components/widget/Profile.astro';
+import SeriesList from '../../components/widget/SeriesList.astro';
+import { getSeriesList, getPostsBySeries, formatDate, slugify } from '../../utils/content-utils';
+
+export async function getStaticPaths() {
+  const series = await getSeriesList();
+  return series.map(({ name }) => ({
+    params: { name: slugify(name) },
+    props: { seriesName: name },
+  }));
+}
+
+const { seriesName } = Astro.props;
+const posts = await getPostsBySeries(seriesName);
+---
+
+<Layout pathname={`/series/${Astro.params.name}`} title={`${seriesName} · Series`}>
+  <Banner client:load compact title={seriesName} subtitle={`Series · ${posts.length} parts`} />
+  <div class="grid">
+    <aside class="sidebar">
+      <Profile />
+      <SeriesList />
+    </aside>
+    <main>
+      <div class="series-track">
+        {posts.map((post, i) => (
+          <a href={`/posts/${post.id}`} class="series-step">
+            <div class="series-num">{i + 1}</div>
+            <div class="series-body">
+              <div class="series-step-title">{post.data.title}</div>
+              {post.data.description && <div class="series-step-desc">{post.data.description}</div>}
+              <div class="series-step-meta">{formatDate(post.data.published)}{post.data.readTime ? ` · ${post.data.readTime} read` : ''}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </main>
+  </div>
+</Layout>

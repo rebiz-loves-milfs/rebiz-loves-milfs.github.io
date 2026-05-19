@@ -1,0 +1,55 @@
+---
+import { getCategoryList, getSortedPosts, getTagList } from '../../utils/content-utils';
+import { SITE } from '../../config';
+
+const posts = await getSortedPosts();
+const categories = await getCategoryList();
+const tags = await getTagList();
+
+const siteStartDate = SITE.siteStartDate;
+const latestPost = posts[0]?.data.published.toISOString() ?? null;
+
+const rows = [
+  { l: 'Posts',      v: posts.length,      icon: 'material-symbols:article-outline' },
+  { l: 'Categories', v: categories.length,  icon: 'material-symbols:bookmark-outline' },
+  { l: 'Tags',       v: tags.length,        icon: 'material-symbols:tag' },
+  { l: 'Running',    v: 0, dynamic: true, id: 'running-days', suffix: 'd',  icon: 'material-symbols:trending-up' },
+  { l: 'Last post',  v: 0, dynamic: true, id: 'last-post',   suffix: null, icon: 'material-symbols:edit-outline' },
+];
+---
+<div class="card">
+  <div class="widget-title">Site stats</div>
+  <div class="stat-list">
+    {rows.map(r => (
+      <div class="stat-row">
+        <span class="stat-l">
+          <iconify-icon icon={r.icon} width="14"></iconify-icon>
+          {r.l}
+        </span>
+        <span class="stat-v">
+          {r.dynamic
+            ? <><span data-stat={r.id}>—</span>{r.suffix && <span style="font-size:11px;color:var(--fg-3)"> {r.suffix}</span>}</>
+            : r.v
+          }
+        </span>
+      </div>
+    ))}
+  </div>
+</div>
+
+<script is:inline define:vars={{ siteStartDate, latestPost }}>
+  function update() {
+    const now = Date.now();
+    const start = new Date(siteStartDate).getTime();
+    document.querySelectorAll('[data-stat="running-days"]').forEach(el => {
+      el.textContent = Math.ceil((now - start) / 86400000);
+    });
+    if (latestPost) {
+      const diff = Math.floor((now - new Date(latestPost).getTime()) / 86400000);
+      document.querySelectorAll('[data-stat="last-post"]').forEach(el => {
+        el.textContent = diff === 0 ? 'today' : `${diff}d ago`;
+      });
+    }
+  }
+  update();
+</script>

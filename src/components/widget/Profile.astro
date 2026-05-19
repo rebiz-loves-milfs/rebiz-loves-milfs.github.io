@@ -1,0 +1,30 @@
+---
+import { AUTHOR } from '../../config';
+---
+<div class="profile">
+  <img src={AUTHOR.avatar} alt={`${AUTHOR.name}'s avatar`} />
+  <h4>{AUTHOR.name}</h4>
+  <div class="bio">{AUTHOR.bio}</div>
+  <div class="socials">
+    {AUTHOR.socials.github && (
+      <a href={AUTHOR.socials.github} title="GitHub" target="_blank" rel="noopener noreferrer" aria-label="GitHub profile">
+        <iconify-icon icon="fa7-brands:github" width="14"></iconify-icon>
+      </a>
+    )}
+    {AUTHOR.socials.bilibili && (
+      <a href={AUTHOR.socials.bilibili} title="Bilibili" target="_blank" rel="noopener noreferrer" aria-label="Bilibili profile">
+        <iconify-icon icon="fa7-brands:bilibili" width="14"></iconify-icon>
+      </a>
+    )}
+    {AUTHOR.socials.discord && (
+      <a href={AUTHOR.socials.discord} title="Discord" target="_blank" rel="noopener noreferrer" aria-label="Discord server">
+        <iconify-icon icon="fa7-brands:discord" width="14"></iconify-icon>
+      </a>
+    )}
+    {AUTHOR.socials.twitter && (
+      <a href={AUTHOR.socials.twitter} title="Twitter/X" target="_blank" rel="noopener noreferrer" aria-label="Twitter profile">
+        <iconify-icon icon="fa7-brands:x-twitter" width="14"></iconify-icon>
+      </a>
+    )}
+  </div>
+</div>

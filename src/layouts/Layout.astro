@@ -1,0 +1,122 @@
+---
+import '../styles/tokens.css';
+import '../styles/kit.css';
+import { ClientRouter } from 'astro:transitions';
+import Navbar from '../components/Navbar.svelte';
+import Footer from '../components/Footer.astro';
+import Sakura from '../components/Sakura.astro';
+import PageProgress from '../components/PageProgress.svelte';
+import MusicPlayer from '../components/MusicPlayer.svelte';
+import CyberBot from '../components/CyberBot.svelte';
+import SearchModal from '../components/SearchModal.svelte';
+import PagePeel from '../components/PagePeel.svelte';
+import Terminal from '../components/Terminal.svelte';
+import CursorTrail from '../components/CursorTrail.svelte';
+import { SITE, THEME, AUTHOR } from '../config';
+import { getSortedPosts } from '../utils/content-utils';
+
+interface Props {
+  title?: string;
+  description?: string;
+  pathname: string;
+  ogImage?: string;
+}
+
+const { title, description = SITE.description, pathname, ogImage } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE.title}` : SITE.title;
+const canonicalURL = new URL(pathname, SITE.url).href;
+const ogImg = new URL(ogImage ?? SITE.ogImage, SITE.url).href;
+
+const allPosts = await getSortedPosts();
+const searchPosts = allPosts.map(p => ({
+  id: p.id,
+  title: p.data.title,
+  description: p.data.description ?? '',
+  category: p.data.category ?? '',
+  tags: p.data.tags,
+}));
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{pageTitle}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonicalURL} />
+  <link rel="icon" href="/assets/favicon.ico" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={canonicalURL} />
+  <meta property="og:title" content={pageTitle} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content={ogImg} />
+  <meta property="og:site_name" content={SITE.title} />
+
+  <!-- Twitter/X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={pageTitle} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImg} />
+  {AUTHOR.socials.twitter && <meta name="twitter:creator" content={AUTHOR.socials.twitter} />}
+
+  <slot name="head" />
+  <ClientRouter />
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+  <script define:vars={{ defaultHue: THEME.defaultHue }}>
+    const d = localStorage.getItem('dark') === 'true';
+    const h = parseInt(localStorage.getItem('hue') ?? defaultHue, 10) || defaultHue;
+    document.documentElement.classList.toggle('dark', d);
+    document.documentElement.style.setProperty('--hue', String(h));
+  </script>
+</head>
+<body>
+  <div class="shell">
+    <PageProgress client:load transition:persist />
+    <Sakura />
+    <Navbar client:load transition:persist />
+    <SearchModal client:load posts={searchPosts} />
+    <div class="page-wrap">
+      <slot />
+    </div>
+    <Footer />
+    <MusicPlayer client:load />
+    <CyberBot client:only="svelte" transition:persist="cyberbot" />
+    <PagePeel client:only="svelte" transition:persist="pagepeel" />
+    <Terminal client:only="svelte" transition:persist="terminal" />
+    <CursorTrail client:only="svelte" transition:persist="cursortrail" />
+  </div>
+  <script>
+    // Konami code → matrix chaos
+    {
+      const SEQ = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+      let idx = 0;
+      document.addEventListener('keydown', (e) => {
+        if (e.key === SEQ[idx]) {
+          idx++;
+          if (idx === SEQ.length) {
+            idx = 0;
+            window.__nx7_triggerPeel?.();
+            // Flood with sakura sparks for extra chaos
+            for (let i = 0; i < 12; i++) {
+              setTimeout(() => {
+                const el = document.createElement('div');
+                el.textContent = ['❀','✦','★','♡','◈'][Math.floor(Math.random()*5)];
+                const hue = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--hue')) || 30;
+                el.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-40px;font-size:${18+Math.random()*20}px;color:oklch(0.80 0.20 ${hue});pointer-events:none;z-index:9995;transition:transform ${2+Math.random()*2}s linear,opacity 0.5s;opacity:1;`;
+                document.body.appendChild(el);
+                requestAnimationFrame(() => { el.style.transform = `translateY(${window.innerHeight+60}px) rotate(${(Math.random()-.5)*360}deg)`; });
+                setTimeout(() => { el.style.opacity='0'; setTimeout(()=>el.remove(),520); }, 2200);
+              }, i * 120);
+            }
+          }
+        } else {
+          idx = e.key === SEQ[0] ? 1 : 0;
+        }
+      });
+    }
+  </script>
+</body>
+</html>

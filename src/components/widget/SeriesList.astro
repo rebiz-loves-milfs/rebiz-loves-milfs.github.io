@@ -1,0 +1,21 @@
+---
+import { getSeriesList, slugify } from '../../utils/content-utils';
+
+const series = await getSeriesList();
+---
+{series.length > 0 && (
+  <div class="card">
+    <div class="widget-title">Series</div>
+    <div class="cat-list">
+      {series.map(({ name, count }) => (
+        <a href={`/series/${slugify(name)}`} class="cat-row">
+          <span>
+            <iconify-icon icon="material-symbols:library-books-outline" width="14" style="vertical-align:-2px;margin-right:4px"></iconify-icon>
+            {name}
+          </span>
+          <span class="count">{count}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+)}

@@ -1,0 +1,16 @@
+---
+import CryptoJS from 'crypto-js';
+import PasswordGate from './PasswordGate.svelte';
+
+interface Props {
+  password: string;
+  hint?: string;
+}
+
+const { password, hint = '' } = Astro.props;
+
+const html = await Astro.slots.render('default');
+const encrypted = CryptoJS.AES.encrypt('MIZUKI-VERIFY:' + html, String(password)).toString();
+---
+
+<PasswordGate client:load encryptedContent={encrypted} hint={hint} />

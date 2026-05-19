@@ -1,0 +1,13 @@
+---
+import { getTagList, slugify } from '../../utils/content-utils';
+
+const tags = await getTagList();
+---
+<div class="card">
+  <div class="widget-title">Tags</div>
+  <div class="tag-cloud">
+    {tags.map(({ name }) => (
+      <a href={`/tag/${slugify(name)}`} class="tag">#{name}</a>
+    ))}
+  </div>
+</div>

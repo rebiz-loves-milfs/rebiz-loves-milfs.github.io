@@ -1,0 +1,84 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Banner from '../../components/Banner.svelte';
+import Profile from '../../components/widget/Profile.astro';
+import Categories from '../../components/widget/Categories.astro';
+import Tags from '../../components/widget/Tags.astro';
+import { getSortedPosts, getTagList, formatDate, slugify } from '../../utils/content-utils';
+
+export async function getStaticPaths() {
+  const tags = await getTagList();
+  return tags.map(({ name }) => ({
+    params: { name: slugify(name) },
+    props: { tagName: name },
+  }));
+}
+
+const { tagName } = Astro.props;
+const allPosts = await getSortedPosts();
+const posts = allPosts.filter(p => p.data.tags.includes(tagName));
+---
+
+<Layout pathname={`/tag/${Astro.params.name}`} title={`#${tagName} · Tag`}>
+  <Banner client:load compact title={`#${tagName}`} subtitle={`${posts.length} post${posts.length !== 1 ? 's' : ''}`} />
+  <div class="grid">
+    <aside class="sidebar">
+      <Profile />
+      <Categories />
+      <Tags />
+    </aside>
+    <main>
+      {posts.map(post => (
+        <article class="post-item">
+          <a href={`/posts/${post.id}`} class="post-card-link" aria-label={`Read: ${post.data.title}`} data-astro-prefetch></a>
+          <div class="post-item-body">
+            <div class="meta">
+              <span>
+                <iconify-icon icon="material-symbols:calendar-today-outline" width="12"></iconify-icon>
+                {formatDate(post.data.published)}
+              </span>
+              {post.data.category && <>
+                <span class="sep">/</span>
+                <a href={`/category/${slugify(post.data.category)}`} class="meta-cat-link">
+                  <iconify-icon icon="material-symbols:bookmark-outline" width="12"></iconify-icon>
+                  {post.data.category}
+                </a>
+              </>}
+              {post.data.readTime && <>
+                <span class="sep">/</span>
+                <span>{post.data.readTime} read</span>
+              </>}
+            </div>
+            <h3>
+              {post.data.title}
+              {post.data.titleTinted && <> <span class="tinted">{post.data.titleTinted}</span></>}
+            </h3>
+            <p>{post.data.description}</p>
+          </div>
+          {post.data.image
+            ? <div class="cover cover-img">
+                <img src={post.data.image} alt={post.data.title} loading="lazy" width="110" height="110" />
+              </div>
+            : <div class="cover" style={post.data.gradient ? `background:${post.data.gradient}` : 'background:var(--primary-soft)'}>
+                {post.data.glyph || '✦'}
+              </div>
+          }
+        </article>
+      ))}
+      {posts.length === 0 && (
+        <div class="card" style="text-align:center;padding:40px;color:var(--fg-3)">
+          No posts with this tag yet.
+        </div>
+      )}
+    </main>
+  </div>
+</Layout>
+
+<style>
+  .meta-cat-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    color: var(--fg-3); text-decoration: none;
+    transition: color 120ms;
+  }
+  .meta-cat-link:hover { color: var(--primary); }
+</style>

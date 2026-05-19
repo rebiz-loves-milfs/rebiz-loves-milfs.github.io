@@ -1,0 +1,16 @@
+---
+import { getCategoryList, slugify } from '../../utils/content-utils';
+
+const categories = await getCategoryList();
+---
+<div class="card">
+  <div class="widget-title">Categories</div>
+  <div class="cat-list">
+    {categories.map(({ name, count }) => (
+      <a href={`/category/${slugify(name)}`} class="cat-row">
+        <span>{name}</span>
+        <span class="count">{count}</span>
+      </a>
+    ))}
+  </div>
+</div>

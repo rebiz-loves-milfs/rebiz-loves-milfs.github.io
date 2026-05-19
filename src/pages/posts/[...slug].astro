@@ -1,0 +1,278 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Banner from '../../components/Banner.svelte';
+import Profile from '../../components/widget/Profile.astro';
+import TOC from '../../components/widget/TOC.astro';
+import SeriesNav from '../../components/widget/SeriesNav.astro';
+import LastFm from '../../components/widget/LastFm.svelte';
+import Discord from '../../components/widget/Discord.svelte';
+import Comments from '../../components/Comments.svelte';
+import Encryptor from '../../components/Encryptor.astro';
+import { getSortedPosts, formatDate, slugify } from '../../utils/content-utils';
+import { render } from 'astro:content';
+import { GISCUS, SITE, AUTHOR } from '../../config';
+
+export async function getStaticPaths() {
+  const posts = await getSortedPosts();
+  return posts.map(post => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+const { title, titleTinted, published, updated, category, tags, description, readTime, gradient, glyph, image, series, encrypted, password, passwordHint } = post.data;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  description: description || '',
+  datePublished: published.toISOString(),
+  ...(updated && { dateModified: updated.toISOString() }),
+  author: { '@type': 'Person', name: AUTHOR.name },
+  url: `${SITE.url}/posts/${post.id}`,
+  ...(image && { image: `${SITE.url}${image}` }),
+};
+---
+
+<Layout pathname={`/posts/${post.id}`} title={title} description={description} ogImage={image || undefined}>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </Fragment>
+  <Banner client:load compact title={title} subtitle={description} />
+  <div class="grid">
+    <aside class="sidebar">
+      <Profile />
+      <TOC headings={headings} />
+      {series && <SeriesNav seriesName={series} currentId={post.id} />}
+      <LastFm client:load />
+      <Discord client:load />
+    </aside>
+    <main>
+      <article class="post-body">
+
+        <!-- Hero -->
+        {image
+          ? <div class="post-hero post-hero-img">
+              <img src={image} alt={title} loading="eager" />
+            </div>
+          : <div class="post-hero post-hero-gradient" style={gradient ? `background:${gradient}` : 'background:var(--primary-soft)'}>
+              <span class="post-glyph">{glyph || '✦'}</span>
+              <div class="post-hero-shimmer"></div>
+            </div>
+        }
+
+        <!-- Meta badges -->
+        <div class="post-meta-bar">
+          <span class="meta-pill">
+            <iconify-icon icon="material-symbols:calendar-today-outline" width="15"></iconify-icon>
+            <time datetime={published.toISOString()}>{formatDate(published)}</time>
+          </span>
+          {updated && (
+            <span class="meta-pill meta-pill-muted">
+              <iconify-icon icon="material-symbols:update" width="15"></iconify-icon>
+              <time datetime={updated.toISOString()}>{formatDate(updated)}</time>
+            </span>
+          )}
+          {category && (
+            <a href={`/category/${slugify(category)}`} class="meta-pill meta-pill-cat">
+              <iconify-icon icon="material-symbols:bookmark-outline" width="15"></iconify-icon>
+              {category}
+            </a>
+          )}
+          {readTime && (
+            <span class="meta-pill meta-pill-muted">
+              <iconify-icon icon="material-symbols:schedule-outline" width="15"></iconify-icon>
+              {readTime} read
+            </span>
+          )}
+        </div>
+
+        <!-- Title -->
+        <h1 class="post-title">
+          {encrypted && <iconify-icon icon="material-symbols:lock-outline" width="28" class="post-lock-icon"></iconify-icon>}
+          {title}
+          {titleTinted && <span class="tinted"> {titleTinted}</span>}
+        </h1>
+
+        <!-- Tags -->
+        {tags.length > 0 && (
+          <div class="tag-row">
+            {tags.map(tag => (
+              <a href={`/tag/${slugify(tag)}`} class="tag-pill">#{tag}</a>
+            ))}
+          </div>
+        )}
+
+        <!-- Post divider -->
+        <div class="post-divider"></div>
+
+        <!-- Content -->
+        <div class="post-content">
+          {encrypted && password
+            ? <Encryptor password={password} hint={passwordHint}><Content /></Encryptor>
+            : <Content />
+          }
+        </div>
+
+        <!-- Share / copy -->
+        <div class="post-actions" id="post-actions">
+          <button class="post-action-btn" id="copy-link-btn" aria-label="Copy link to post">
+            <iconify-icon icon="material-symbols:link" width="16"></iconify-icon>
+            Copy link
+          </button>
+          {AUTHOR.socials.twitter && (
+            <a
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(`${SITE.url}/posts/${post.id}`)}`}
+              target="_blank" rel="noopener noreferrer"
+              class="post-action-btn post-action-twitter"
+              aria-label="Share on Twitter"
+            >
+              <iconify-icon icon="fa7-brands:x-twitter" width="14"></iconify-icon>
+              Share
+            </a>
+          )}
+        </div>
+        <script>
+          const btn = document.getElementById('copy-link-btn');
+          if (btn) {
+            btn.addEventListener('click', async () => {
+              try {
+                await navigator.clipboard.writeText(window.location.href);
+                btn.innerHTML = '<iconify-icon icon="material-symbols:check" width="16"></iconify-icon> Copied!';
+                setTimeout(() => {
+                  btn.innerHTML = '<iconify-icon icon="material-symbols:link" width="16"></iconify-icon> Copy link';
+                }, 2000);
+              } catch {}
+            });
+          }
+        </script>
+
+        <!-- Comments -->
+        <Comments
+          client:visible
+          repo={GISCUS.repo}
+          repoId={GISCUS.repoId}
+          category={GISCUS.category}
+          categoryId={GISCUS.categoryId}
+        />
+
+        <!-- Back -->
+        <div class="post-footer">
+          <a href="/" class="btn-back">
+            <iconify-icon icon="material-symbols:arrow-back" width="14"></iconify-icon>
+            Back to posts
+          </a>
+        </div>
+      </article>
+    </main>
+  </div>
+</Layout>
+
+<style>
+  /* Hero */
+  .post-hero {
+    width: 100%; border-radius: var(--radius-large);
+    margin-bottom: 24px; overflow: hidden;
+  }
+  .post-hero-img { aspect-ratio: 16 / 6; }
+  .post-hero-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .post-hero-gradient {
+    height: 200px; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .post-glyph {
+    font-size: 80px; opacity: 0.65;
+    filter: drop-shadow(0 4px 16px rgba(0,0,0,0.15));
+    position: relative; z-index: 1;
+  }
+  .post-hero-shimmer {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* Meta bar */
+  .post-meta-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    margin-bottom: 20px;
+  }
+  .meta-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 999px;
+    font-size: 13.5px; font-family: var(--font-mono);
+    background: var(--btn-regular-bg); color: var(--btn-content);
+    white-space: nowrap;
+  }
+  .meta-pill iconify-icon { width: 14px; height: 14px; flex-shrink: 0; }
+  .meta-pill-muted { color: var(--fg-3); background: transparent; border: 1px solid var(--border); }
+  .meta-pill-cat {
+    background: var(--primary-soft); color: var(--primary);
+    text-decoration: none; font-weight: 600;
+    transition: background 120ms;
+  }
+  .meta-pill-cat:hover { background: var(--btn-regular-bg-hover); }
+
+  .post-lock-icon {
+    color: var(--primary);
+    vertical-align: middle;
+    margin-right: 6px;
+    opacity: 0.8;
+  }
+
+  /* Title */
+  .post-title {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.15; color: var(--fg-1);
+    margin: 0 0 12px; letter-spacing: -0.01em;
+  }
+  .post-title .tinted { color: var(--primary); }
+
+  /* Tags */
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .tag-pill {
+    font-size: 12px; padding: 3px 10px; border-radius: 999px;
+    background: var(--primary-soft); color: var(--primary);
+    font-family: var(--font-display); text-decoration: none;
+    transition: background 120ms, transform 120ms;
+  }
+  .tag-pill:hover { background: var(--btn-regular-bg-hover); transform: translateY(-1px); }
+
+  /* Divider */
+  .post-divider {
+    height: 1px; background: var(--border);
+    margin: 24px 0; border-radius: 1px;
+    background: linear-gradient(to right, var(--primary-soft), var(--border), transparent);
+  }
+
+  /* Content prose overrides */
+  .post-content :global(h2) { scroll-margin-top: 110px; }
+  .post-content :global(h3) { scroll-margin-top: 110px; }
+  .post-content :global(p) { line-height: 1.8; }
+
+  /* Share / copy actions */
+  .post-actions {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-top: 40px; padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .post-action-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px; border-radius: 999px;
+    font-size: 13px; font-family: var(--font-display); font-weight: 600;
+    background: var(--btn-regular-bg); color: var(--btn-content);
+    border: 1px solid var(--border); cursor: pointer;
+    text-decoration: none; transition: background 120ms, transform 100ms;
+  }
+  .post-action-btn:hover { background: var(--btn-regular-bg-hover); transform: translateY(-1px); }
+  .post-action-twitter { background: var(--primary-soft); color: var(--primary); border-color: transparent; }
+  .post-action-twitter:hover { background: var(--btn-regular-bg-hover); }
+
+  /* Footer */
+  .post-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .btn-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--fg-2); text-decoration: none; transition: color 0.2s;
+  }
+  .btn-back:hover { color: var(--primary); }
+</style>

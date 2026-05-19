@@ -1,0 +1,27 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+interface Props {
+  headings?: Heading[];
+}
+const { headings = [] } = Astro.props;
+
+const BADGES = ['あ','い','う','え','お','か','き','く','け','こ','さ','し','す','せ','そ'];
+const h2s = headings.filter(h => h.depth === 2);
+---
+{h2s.length > 0 && (
+  <div class="card">
+    <div class="widget-title">Table of Contents</div>
+    <div class="toc">
+      {h2s.map((h, i) => (
+        <a href={`#${h.slug}`} class="toc-item">
+          <span class="badge">{BADGES[i] ?? String(i + 1)}</span>
+          <span>{h.text}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+)}

@@ -1,0 +1,68 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Banner from '../../components/Banner.svelte';
+import Profile from '../../components/widget/Profile.astro';
+import Categories from '../../components/widget/Categories.astro';
+import Tags from '../../components/widget/Tags.astro';
+import { getSortedPosts, getCategoryList, formatDate, slugify } from '../../utils/content-utils';
+
+export async function getStaticPaths() {
+  const categories = await getCategoryList();
+  return categories.map(({ name }) => ({
+    params: { name: slugify(name) },
+    props: { categoryName: name },
+  }));
+}
+
+const { categoryName } = Astro.props;
+const allPosts = await getSortedPosts();
+const posts = allPosts.filter(p => (p.data.category?.trim() || 'Uncategorized') === categoryName);
+---
+
+<Layout pathname={`/category/${Astro.params.name}`} title={`${categoryName} · Category`}>
+  <Banner client:load compact title={categoryName} subtitle={`${posts.length} post${posts.length !== 1 ? 's' : ''}`} />
+  <div class="grid">
+    <aside class="sidebar">
+      <Profile />
+      <Categories />
+      <Tags />
+    </aside>
+    <main>
+      {posts.map(post => (
+        <article class="post-item">
+          <a href={`/posts/${post.id}`} class="post-card-link" aria-label={`Read: ${post.data.title}`} data-astro-prefetch></a>
+          <div class="post-item-body">
+            <div class="meta">
+              <span>
+                <iconify-icon icon="material-symbols:calendar-today-outline" width="12"></iconify-icon>
+                {formatDate(post.data.published)}
+              </span>
+              {post.data.readTime && <>
+                <span class="sep">/</span>
+                <span>{post.data.readTime} read</span>
+              </>}
+            </div>
+            <h3>
+              {post.data.title}
+              {post.data.titleTinted && <> <span class="tinted">{post.data.titleTinted}</span></>}
+            </h3>
+            <p>{post.data.description}</p>
+          </div>
+          {post.data.image
+            ? <div class="cover cover-img">
+                <img src={post.data.image} alt={post.data.title} loading="lazy" width="110" height="110" />
+              </div>
+            : <div class="cover" style={post.data.gradient ? `background:${post.data.gradient}` : 'background:var(--primary-soft)'}>
+                {post.data.glyph || '✦'}
+              </div>
+          }
+        </article>
+      ))}
+      {posts.length === 0 && (
+        <div class="card" style="text-align:center;padding:40px;color:var(--fg-3)">
+          No posts in this category yet.
+        </div>
+      )}
+    </main>
+  </div>
+</Layout>

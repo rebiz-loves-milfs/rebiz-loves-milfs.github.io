@@ -1,0 +1,17 @@
+{
+  "name": "mizuki-astro",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/svelte": "^7.0.0",
+    "astro": "^5.0.0",
+    "crypto-js": "^4.2.0",
+    "sharp": "^0.34.0",
+    "svelte": "^5.0.0"
+  }
+}

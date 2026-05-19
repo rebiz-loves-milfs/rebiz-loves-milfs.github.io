@@ -1,0 +1,257 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Banner from '../components/Banner.svelte';
+import Profile from '../components/widget/Profile.astro';
+import SiteStats from '../components/widget/SiteStats.astro';
+import LastFm from '../components/widget/LastFm.svelte';
+import Discord from '../components/widget/Discord.svelte';
+import Calendar from '../components/widget/Calendar.svelte';
+---
+
+<Layout pathname="/about" title="About">
+  <Banner client:load compact title="About" subtitle="The human behind the blog" />
+  <div class="grid three-col">
+    <aside class="sidebar">
+      <Profile />
+      <SiteStats />
+    </aside>
+    <main>
+      <article class="post-body about-page">
+
+        <!-- Intro -->
+        <section class="about-intro">
+          <div class="about-intro-text">
+            <h1 class="about-name">Hey, I'm Rebiz <span class="wave">👋</span></h1>
+            <p class="about-tagline">
+              I write about things I love — anime, music, code, and the slow pleasure of paying attention to small things.
+            </p>
+            <p>
+              This blog is my corner of the internet. No algorithm, no schedule, no niche.
+              Just things worth putting into words. If you found your way here, welcome.
+            </p>
+            <p>
+              <!-- Replace this with your own bio -->
+              I'm based somewhere with good internet and terrible sleep schedules.
+              When I'm not writing, I'm either rewatching Spice and Wolf for the fourth time,
+              deep in a Last.fm rabbit hole, or building tools no one asked for.
+            </p>
+          </div>
+          <div class="about-intro-art">
+            <div class="art-card">
+              <span class="art-glyph">✦</span>
+              <div class="art-lines">
+                <div class="art-line art-line-1"></div>
+                <div class="art-line art-line-2"></div>
+                <div class="art-line art-line-3"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="about-divider"></div>
+
+        <!-- What I'm into -->
+        <section>
+          <h2 class="about-section-title">What I'm into</h2>
+          <div class="interest-grid">
+            <div class="interest-card">
+              <div class="interest-icon">
+                <iconify-icon icon="material-symbols:movie-outline" width="22"></iconify-icon>
+              </div>
+              <div class="interest-label">Anime</div>
+              <div class="interest-desc">Fantasy, slice-of-life, anything with good world-building. Current obsession: merchant economics in Spice and Wolf.</div>
+            </div>
+            <div class="interest-card">
+              <div class="interest-icon">
+                <iconify-icon icon="material-symbols:music-note-outline" width="22"></iconify-icon>
+              </div>
+              <div class="interest-label">Music</div>
+              <div class="interest-desc">J-pop, jazz, folk. Aimer and Bill Evans can coexist on the same playlist and I will die on this hill.</div>
+            </div>
+            <div class="interest-card">
+              <div class="interest-icon">
+                <iconify-icon icon="material-symbols:edit-outline" width="22"></iconify-icon>
+              </div>
+              <div class="interest-label">Writing</div>
+              <div class="interest-desc">Essays, notes, half-formed thoughts. Writing is how I figure out what I actually think about something.</div>
+            </div>
+            <div class="interest-card">
+              <div class="interest-icon">
+                <iconify-icon icon="material-symbols:code-outline" width="22"></iconify-icon>
+              </div>
+              <div class="interest-label">Building things</div>
+              <div class="interest-desc">Web stuff mostly. Occasionally I build a tool with more CSS variables than makes sense.</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="about-divider"></div>
+
+        <!-- This site -->
+        <section class="about-site">
+          <h2 class="about-section-title">About this site</h2>
+          <p>
+            Built with <strong>Astro</strong> and the <strong>Mizuki design system</strong> —
+            a hue-driven CSS variable system where the entire site retints from a single
+            <code>--hue</code> value. Try the palette button in the navbar.
+          </p>
+          <div class="tech-stack">
+            <div class="tech-pill">
+              <iconify-icon icon="devicon:astro" width="16"></iconify-icon>
+              Astro 5
+            </div>
+            <div class="tech-pill">
+              <iconify-icon icon="devicon:svelte" width="16"></iconify-icon>
+              Svelte 5
+            </div>
+            <div class="tech-pill">
+              <iconify-icon icon="material-symbols:palette-outline" width="16"></iconify-icon>
+              OKLCH color
+            </div>
+            <div class="tech-pill">
+              <iconify-icon icon="material-symbols:self-improvement-outline" width="16"></iconify-icon>
+              No frameworks
+            </div>
+          </div>
+          <div class="admon tip">
+            <iconify-icon icon="material-symbols:lightbulb-outline"></iconify-icon>
+            <span class="label">Tip</span>
+            Use the 🎨 palette button in the navbar to pick any accent hue — the whole site follows.
+          </div>
+        </section>
+
+        <div class="about-divider"></div>
+
+        <!-- Contact / footer note -->
+        <section class="about-contact">
+          <p>
+            Want to say hi? Find me on the socials in the sidebar, or just
+            read something and leave a comment. That's enough.
+          </p>
+          <p class="about-sign">— Rebiz</p>
+        </section>
+
+      </article>
+    </main>
+
+    <aside class="sidebar-right">
+      <LastFm client:load />
+      <Discord client:load />
+      <Calendar client:load />
+    </aside>
+  </div>
+</Layout>
+
+<style>
+  .about-page { padding: 36px 40px; }
+
+  /* Intro */
+  .about-intro {
+    display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: start;
+  }
+  @media (max-width: 600px) { .about-intro { grid-template-columns: 1fr; } .about-intro-art { display: none; } }
+
+  .about-name {
+    font-family: var(--font-display); font-size: 36px; font-weight: 700;
+    color: var(--fg-1); margin: 0 0 12px; line-height: 1.2;
+  }
+  .wave { display: inline-block; animation: wave-hand 2s ease-in-out infinite; transform-origin: 70% 70%; }
+  @keyframes wave-hand {
+    0%, 100% { transform: rotate(0deg); }
+    15%       { transform: rotate(14deg); }
+    30%       { transform: rotate(-8deg); }
+    45%       { transform: rotate(14deg); }
+    60%       { transform: rotate(-4deg); }
+    75%       { transform: rotate(10deg); }
+  }
+  .about-tagline {
+    font-size: 17px; color: var(--primary); font-weight: 600; margin: 0 0 16px;
+    line-height: 1.5;
+  }
+  .about-intro-text p { font-size: 15px; line-height: 1.75; color: var(--fg-2); margin: 0 0 12px; }
+
+  /* Decorative art card */
+  .art-card {
+    width: 120px; height: 160px; border-radius: var(--radius-large);
+    background: linear-gradient(135deg, var(--primary-soft), oklch(0.90 0.06 calc(var(--hue) + 30)));
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px oklch(0.65 0.14 var(--hue) / 0.18);
+    border: 1px solid oklch(0.88 0.06 var(--hue));
+  }
+  .art-glyph {
+    font-size: 48px; color: var(--primary); opacity: 0.5;
+    animation: art-pulse 3s ease-in-out infinite;
+  }
+  @keyframes art-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1) rotate(10deg); } }
+  .art-lines { position: absolute; inset: 0; pointer-events: none; }
+  .art-line {
+    position: absolute; left: 0; right: 0; height: 1px;
+    background: linear-gradient(to right, transparent, var(--primary), transparent);
+    opacity: 0.25;
+  }
+  .art-line-1 { top: 25%; } .art-line-2 { top: 50%; opacity: 0.35; } .art-line-3 { top: 75%; }
+
+  /* Divider */
+  .about-divider {
+    height: 1px; margin: 32px 0;
+    background: linear-gradient(to right, var(--primary-soft), var(--border), transparent);
+  }
+
+  /* Section title */
+  .about-section-title {
+    font-family: var(--font-display); font-size: 22px; font-weight: 700;
+    color: var(--fg-1); margin: 0 0 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .about-section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border); border-radius: 1px;
+  }
+
+  /* Interest grid */
+  .interest-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  }
+  @media (max-width: 640px) { .interest-grid { grid-template-columns: 1fr; } }
+  .interest-card {
+    padding: 16px 18px; border-radius: var(--radius-large);
+    background: var(--btn-regular-bg);
+    border: 1px solid var(--border);
+    transition: background 120ms, transform 150ms, border-color 150ms;
+  }
+  .interest-card:hover {
+    background: var(--primary-soft); border-color: oklch(0.80 0.08 var(--hue));
+    transform: translateY(-2px);
+  }
+  .interest-icon {
+    width: 40px; height: 40px; border-radius: 0.6rem;
+    background: var(--card-bg); color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 6px oklch(0.65 0.14 var(--hue) / 0.1);
+  }
+  .interest-label { font-weight: 700; font-size: 14px; color: var(--fg-1); margin-bottom: 4px; }
+  .interest-desc { font-size: 12.5px; color: var(--fg-2); line-height: 1.5; }
+
+  /* Tech stack */
+  .about-site p { font-size: 15px; line-height: 1.75; color: var(--fg-2); margin: 0 0 16px; }
+  .about-site code {
+    font-family: var(--font-mono); font-size: 13px;
+    background: var(--inline-code-bg); color: var(--inline-code-color);
+    padding: 1px 5px; border-radius: 4px;
+  }
+  .tech-stack { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .tech-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 600;
+    background: var(--btn-regular-bg); color: var(--btn-content);
+    border: 1px solid var(--border);
+  }
+
+  /* Contact */
+  .about-contact p { font-size: 15px; color: var(--fg-2); line-height: 1.75; margin: 0 0 8px; }
+  .about-sign { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--primary); }
+
+  @media (max-width: 800px) { .about-page { padding: 24px 20px; } }
+</style>

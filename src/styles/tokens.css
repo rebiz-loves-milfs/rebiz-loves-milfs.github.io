@@ -1,0 +1,280 @@
+/* ============================================================================
+   Mizuki Design System — Colors & Type
+   ----------------------------------------------------------------------------
+   Mizuki is a hue-driven theme: every accent derives from a single --hue value
+   (0–360) combined with oklch lightness/chroma. The default in the source
+   codebase is hue 30 (warm orange/amber). Change --hue at runtime to retint
+   the whole interface without touching any other token.
+
+   This file mirrors the variables consumed throughout the Mizuki / Fuwari
+   codebase (see src/styles/main.css, markdown.css, scrollbar.css, etc.).
+   ============================================================================ */
+
+@font-face {
+  font-family: "ZenMaruGothic-Medium";
+  src: url("/fonts/ZenMaruGothic-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-display: swap;
+}
+
+/* ----------------------------------------------------------------------------
+   VIEW TRANSITIONS — smooth cross-page fade
+   ---------------------------------------------------------------------------- */
+@keyframes vt-fade-in  { from { opacity: 0; transform: translateY(4px); } }
+@keyframes vt-fade-out { to   { opacity: 0; transform: translateY(-4px); } }
+
+::view-transition-old(root) {
+  animation: 90ms ease-out both vt-fade-out;
+}
+::view-transition-new(root) {
+  animation: 140ms ease-out both vt-fade-in;
+}
+
+/* ----------------------------------------------------------------------------
+   FOUNDATION — hue, radius, shadow, transition
+   ---------------------------------------------------------------------------- */
+:root {
+  --hue: 30;                /* default theme hue. set via JS / localStorage     */
+  --page-width: 90rem;      /* 1440px content container                          */
+  --radius-small: 0.5rem;
+  --radius-medium: 0.75rem;
+  --radius-large: 1rem;     /* card / panel rounding — used everywhere           */
+  --radius-pill: 999px;
+
+  /* transitions (mirror src/styles/_transition-vars.css) */
+  --transition-duration: 120ms;
+  --transition-easing:     cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-easing-out: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+  --transition-translate: 1.5rem;
+  --transition-stagger:   35ms;
+
+  /* elevation */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.10);
+  --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.005);   /* card-shadow utility       */
+}
+
+/* ----------------------------------------------------------------------------
+   LIGHT MODE — surfaces, text, accents
+   ---------------------------------------------------------------------------- */
+:root {
+  /* surfaces */
+  --page-bg:                 oklch(0.95 0.01 var(--hue));
+  --card-bg:                 #ffffff;
+  --card-bg-transparent:     oklch(1 0 0 / 0.55);   /* used over wallpapers     */
+  --float-panel-bg:          #ffffff;
+  --codeblock-bg:            oklch(0.96 0.006 var(--hue));
+
+  /* foreground text  — Mizuki composes text colors via Tailwind opacity        */
+  --fg-1: rgb(0 0 0 / 0.9);   /* primary text             text-90 / text-black/90 */
+  --fg-2: rgb(0 0 0 / 0.75);  /* secondary                text-75                 */
+  --fg-3: rgb(0 0 0 / 0.5);   /* tertiary, captions       text-50                 */
+  --fg-4: rgb(0 0 0 / 0.3);   /* placeholder              text-30                 */
+  --fg-5: rgb(0 0 0 / 0.25);  /* disabled                 text-25                 */
+
+  /* primary / accent (chromatic, follows --hue)                                  */
+  --primary:         oklch(0.70 0.14 var(--hue));
+  --primary-hover:   oklch(0.65 0.16 var(--hue));
+  --primary-active:  oklch(0.60 0.18 var(--hue));
+  --primary-soft:    oklch(0.92 0.04 var(--hue));   /* tinted surface           */
+
+  /* links */
+  --link-underline: oklch(0.80 0.10 var(--hue));
+  --link-hover:     oklch(0.70 0.14 var(--hue));
+  --link-active:    oklch(0.60 0.16 var(--hue));
+
+  /* buttons — three families: regular (filled tint), plain (ghost), card        */
+  --btn-content:           oklch(0.55 0.075 var(--hue));
+  --btn-regular-bg:        oklch(0.95 0.025 var(--hue));
+  --btn-regular-bg-hover:  oklch(0.90 0.05  var(--hue));
+  --btn-regular-bg-active: oklch(0.85 0.08  var(--hue));
+  --btn-plain-bg-hover:    oklch(0.95 0.02  var(--hue));
+  --btn-plain-bg-active:   oklch(0.92 0.04  var(--hue));
+  --btn-card-bg-hover:     oklch(0.96 0.02  var(--hue));
+  --btn-card-bg-active:    oklch(0.94 0.04  var(--hue));
+
+  /* dividers & lines */
+  --line-divider: rgb(0 0 0 / 0.08);
+  --line-color:   rgb(0 0 0 / 0.10);
+  --meta-divider: rgb(0 0 0 / 0.20);
+  --border:       rgb(0 0 0 / 0.10);
+  --hover:        oklch(0.94 0.015 var(--hue));
+
+  /* code / inline */
+  --inline-code-bg:    oklch(0.95 0.025 var(--hue));
+  --inline-code-color: oklch(0.55 0.10  var(--hue));
+
+  /* selection */
+  --selection-bg: oklch(0.92 0.04 var(--hue));
+
+  /* scrollbar */
+  --scrollbar-bg:        rgb(0 0 0 / 0.15);
+  --scrollbar-bg-hover:  rgb(0 0 0 / 0.25);
+  --scrollbar-bg-active: rgb(0 0 0 / 0.40);
+  --scrollbar-bg-light:        rgb(0 0 0 / 0.15);
+  --scrollbar-bg-hover-light:  rgb(0 0 0 / 0.25);
+  --scrollbar-bg-active-light: rgb(0 0 0 / 0.40);
+  --scrollbar-bg-dark:         rgb(255 255 255 / 0.15);
+  --scrollbar-bg-hover-dark:   rgb(255 255 255 / 0.25);
+  --scrollbar-bg-active-dark:  rgb(255 255 255 / 0.40);
+
+  /* TOC badge — the あいうえお / numeric pill next to TOC items                  */
+  --toc-badge-bg: oklch(0.92 0.04 var(--hue));
+
+  /* semantic — admonition / callouts (note / tip / warning / caution / important)*/
+  --note-fg:      oklch(0.55 0.13 250);   --note-bg:      oklch(0.95 0.025 250);
+  --tip-fg:       oklch(0.55 0.13 160);   --tip-bg:       oklch(0.95 0.025 160);
+  --important-fg: oklch(0.55 0.13 305);   --important-bg: oklch(0.95 0.025 305);
+  --warning-fg:   oklch(0.62 0.16  85);   --warning-bg:   oklch(0.95 0.025  85);
+  --caution-fg:   oklch(0.60 0.18  25);   --caution-bg:   oklch(0.95 0.025  25);
+}
+
+/* ----------------------------------------------------------------------------
+   DARK MODE  (`.dark` class on <html>)
+   ---------------------------------------------------------------------------- */
+:root.dark {
+  --page-bg:                 oklch(0.16 0.014 var(--hue));
+  --card-bg:                 oklch(0.21 0.018 var(--hue));
+  --card-bg-transparent:     oklch(0.21 0.018 var(--hue) / 0.55);
+  --float-panel-bg:          oklch(0.21 0.018 var(--hue));
+  --codeblock-bg:            oklch(0.18 0.016 var(--hue));
+
+  --fg-1: rgb(255 255 255 / 0.9);
+  --fg-2: rgb(255 255 255 / 0.75);
+  --fg-3: rgb(255 255 255 / 0.5);
+  --fg-4: rgb(255 255 255 / 0.3);
+  --fg-5: rgb(255 255 255 / 0.25);
+
+  --primary:        oklch(0.75 0.14 var(--hue));
+  --primary-hover:  oklch(0.80 0.13 var(--hue));
+  --primary-active: oklch(0.85 0.12 var(--hue));
+  --primary-soft:   oklch(0.35 0.045 var(--hue));
+
+  --link-underline: oklch(0.45 0.07 var(--hue));
+  --link-hover:     oklch(0.75 0.14 var(--hue));
+  --link-active:    oklch(0.85 0.10 var(--hue));
+
+  --btn-content:           oklch(0.85 0.06 var(--hue));
+  --btn-regular-bg:        oklch(0.30 0.025 var(--hue));
+  --btn-regular-bg-hover:  oklch(0.35 0.035 var(--hue));
+  --btn-regular-bg-active: oklch(0.40 0.045 var(--hue));
+  --btn-plain-bg-hover:    oklch(0.27 0.025 var(--hue));
+  --btn-plain-bg-active:   oklch(0.31 0.035 var(--hue));
+  --btn-card-bg-hover:     oklch(0.27 0.025 var(--hue));
+  --btn-card-bg-active:    oklch(0.31 0.035 var(--hue));
+
+  --line-divider: rgb(255 255 255 / 0.08);
+  --line-color:   rgb(255 255 255 / 0.10);
+  --meta-divider: rgb(255 255 255 / 0.20);
+  --border:       rgb(255 255 255 / 0.10);
+  --hover:        oklch(0.27 0.02 var(--hue));
+
+  --inline-code-bg:    oklch(0.30 0.025 var(--hue));
+  --inline-code-color: oklch(0.85 0.06  var(--hue));
+
+  --selection-bg: oklch(0.35 0.045 var(--hue));
+  --toc-badge-bg: oklch(0.35 0.045 var(--hue));
+
+  --note-fg:      oklch(0.78 0.10 250);   --note-bg:      oklch(0.28 0.035 250);
+  --tip-fg:       oklch(0.78 0.10 160);   --tip-bg:       oklch(0.28 0.035 160);
+  --important-fg: oklch(0.78 0.10 305);   --important-bg: oklch(0.28 0.035 305);
+  --warning-fg:   oklch(0.82 0.13  85);   --warning-bg:   oklch(0.28 0.035  85);
+  --caution-fg:   oklch(0.78 0.13  25);   --caution-bg:   oklch(0.28 0.035  25);
+}
+
+/* ----------------------------------------------------------------------------
+   TYPE SYSTEM
+   ----------------------------------------------------------------------------
+   The Mizuki codebase configures two font families: an ASCII font with highest
+   priority (default ZenMaruGothic-Medium) and a CJK fallback (default 萝莉体 第二版,
+   "loli-tai dai-2-ban"). Code blocks use JetBrains Mono Variable. The site also
+   declares `--font-sans: "Roboto"…` in @theme but the body inline-style above
+   overrides it with the configured font stack. Roboto is the Tailwind fallback.
+   ---------------------------------------------------------------------------- */
+:root {
+  --font-display: "ZenMaruGothic-Medium", "Loli-Tai 2", system-ui, sans-serif;
+  --font-sans:    "ZenMaruGothic-Medium", system-ui, -apple-system, "Segoe UI",
+                  Roboto, "Helvetica Neue", sans-serif;
+  --font-mono:    "JetBrains Mono Variable", "JetBrains Mono", ui-monospace,
+                  SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+
+  /* scale — Mizuki uses html { font-size: 14px → 16px } with Tailwind defaults  */
+  --text-xs:   0.75rem;   /* 12px */
+  --text-sm:   0.875rem;  /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg:   1.125rem;  /* 18px */
+  --text-xl:   1.25rem;   /* 20px */
+  --text-2xl:  1.5rem;    /* 24px */
+  --text-3xl:  1.875rem;  /* 30px */
+  --text-4xl:  2.25rem;   /* 36px */
+  --text-5xl:  3rem;      /* 48px — banner title shadows on top of imagery       */
+  --text-6xl:  3.75rem;
+  --text-7xl:  4.5rem;    /* banner-title @ desktop, with text-shadow 2px 2px 4px*/
+
+  /* leading */
+  --leading-tight:  1.15;
+  --leading-snug:   1.30;
+  --leading-normal: 1.55;
+  --leading-loose:  1.75;
+
+  /* weight */
+  --weight-regular: 400;
+  --weight-medium:  500;  /* default body weight for ZenMaruGothic                */
+  --weight-bold:    700;
+}
+
+/* ----------------------------------------------------------------------------
+   SEMANTIC TYPE — usable directly on elements
+   ---------------------------------------------------------------------------- */
+.h1, h1.display {
+  font-family: var(--font-display);
+  font-size: var(--text-5xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--fg-1);
+  letter-spacing: -0.01em;
+}
+.h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-snug);
+  color: var(--fg-1);
+}
+.h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-snug);
+  color: var(--fg-1);
+}
+.h4 {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-snug);
+  color: var(--fg-1);
+}
+.body-lg { font-size: var(--text-lg);  line-height: var(--leading-normal); color: var(--fg-2); }
+.body    { font-size: var(--text-base);line-height: var(--leading-normal); color: var(--fg-2); }
+.body-sm { font-size: var(--text-sm); line-height: var(--leading-normal); color: var(--fg-2); }
+.caption { font-size: var(--text-xs); line-height: var(--leading-normal); color: var(--fg-3); text-transform: none; letter-spacing: 0.01em; }
+.code    { font-family: var(--font-mono); font-size: 0.92em; background: var(--inline-code-bg); color: var(--inline-code-color); padding: 0.1em 0.35em; border-radius: 0.35rem; }
+
+/* banner title — used over imagery */
+.banner-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-7xl);
+  line-height: 1.1;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+}
+.banner-subtitle {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--text-lg);
+  color: rgba(255,255,255,0.92);
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+}

@@ -1,0 +1,33 @@
+---
+import { getPostsBySeries, slugify } from '../../utils/content-utils';
+
+interface Props {
+  seriesName: string;
+  currentId: string;
+}
+
+const { seriesName, currentId } = Astro.props;
+const posts = await getPostsBySeries(seriesName);
+---
+{posts.length > 1 && (
+  <div class="card">
+    <div class="widget-title">
+      <iconify-icon icon="material-symbols:library-books-outline" width="13" style="vertical-align:-2px;margin-right:4px"></iconify-icon>
+      Series: {seriesName}
+    </div>
+    <div class="toc">
+      {posts.map((post, i) => (
+        <a
+          href={`/posts/${post.id}`}
+          class={`toc-item${post.id === currentId ? ' active' : ''}`}
+        >
+          <span class="badge">{i + 1}</span>
+          <span>{post.data.title}</span>
+        </a>
+      ))}
+    </div>
+    <a href={`/series/${slugify(seriesName)}`} class="series-view-all">
+      View all in series →
+    </a>
+  </div>
+)}

@@ -1,0 +1,17 @@
+---
+import { ANNOUNCEMENT } from '../../config';
+---
+{ANNOUNCEMENT.enabled && (
+  <div class="announce">
+    <div class="announce-icon">
+      <iconify-icon icon="material-symbols:campaign-outline" width="16"></iconify-icon>
+    </div>
+    <div style="flex:1;min-width:0">
+      <h5>{ANNOUNCEMENT.title}</h5>
+      <p>{ANNOUNCEMENT.text}</p>
+      {ANNOUNCEMENT.link && (
+        <a class="action" href={ANNOUNCEMENT.link}>{ANNOUNCEMENT.linkLabel}</a>
+      )}
+    </div>
+  </div>
+)}

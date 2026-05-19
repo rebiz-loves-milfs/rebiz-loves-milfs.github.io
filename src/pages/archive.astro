@@ -1,0 +1,35 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Banner from '../components/Banner.svelte';
+import { getSortedPosts, groupPostsByYear, formatDate } from '../utils/content-utils';
+
+const posts = await getSortedPosts();
+const byYear = groupPostsByYear(posts);
+const years = [...byYear.keys()].sort((a, b) => b - a);
+---
+
+<Layout pathname="/archive" title="Archive">
+  <Banner client:load compact title="Archive" />
+  <div class="grid no-sidebar">
+    <main>
+      <div class="card">
+        {years.map(year => (
+          <div>
+            <div class="archive-year">{year}</div>
+            <div class="archive-list">
+              {byYear.get(year)!.map(post => (
+                <a href={`/posts/${post.id}`} class="archive-row">
+                  <span class="date">
+                    {post.data.published.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
+                  </span>
+                  <span>{post.data.title}{post.data.titleTinted ? ` ${post.data.titleTinted}` : ''}</span>
+                  {post.data.tags[0] && <span class="tag-mini">#{post.data.tags[0]}</span>}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </main>
+  </div>
+</Layout>
