@@ -57,10 +57,10 @@
         gainNode.gain.setValueAtTime(gain, now);
         gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-        // Noise gain (softer than osc)
+        // Noise gain — more prominent than osc for tactile premium feel
         const noiseGain = ac.createGain();
-        noiseGain.gain.setValueAtTime(gain * 0.3, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.5);
+        noiseGain.gain.setValueAtTime(gain * 0.55, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.4);
 
         osc.connect(gainNode);
         noise.connect(filter);
@@ -100,7 +100,7 @@
         filter.Q.value = 0.7;
 
         const gainNode = ac.createGain();
-        gainNode.gain.setValueAtTime(0.05, now);
+        gainNode.gain.setValueAtTime(0.025, now);
         gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
         noise.connect(filter);
@@ -132,22 +132,21 @@
       }
 
       if (key === ' ' || key === 'Enter') {
-        // Deeper thud — lower freq, slightly longer
-        playClick(90, 0.09, 0.055, 'sine', 800);
+        // Spacebar/Enter: soft deep thud like a premium stabilized key
+        playClick(80, 0.045, 0.050, 'sine', 600);
         return;
       }
 
       if (key === 'Backspace' || key === 'Delete') {
-        // Different pitch, slightly lower
-        playClick(260, 0.07, 0.030, 'triangle', 3000);
+        // Backspace: subtle muted thock
+        playClick(240, 0.035, 0.028, 'triangle', 2200);
         return;
       }
 
-      // Regular keypress — short percussive click
-      // Vary freq slightly per key for character
+      // Regular keypress — warm, short thock (lower gain + warmer filter = premium feel)
       const seed = (key.charCodeAt(0) ?? 65) % 20;
-      const freq = 580 + seed * 8;
-      playClick(freq, 0.08, 0.025, 'sine', 4500);
+      const freq = 520 + seed * 7;
+      playClick(freq, 0.038, 0.022, 'sine', 2800);
     }
 
     document.addEventListener('keydown', onKeydown, { passive: true });

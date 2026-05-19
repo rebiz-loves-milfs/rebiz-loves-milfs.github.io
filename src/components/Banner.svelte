@@ -6,10 +6,10 @@
   export let subtitle = '';
 
   const BANNERS = [
-    '/assets/banner-1.webp',
-    '/assets/banner-2.webp',
-    '/assets/banner-3.webp',
-    '/assets/banner-4.webp',
+    { src: '/assets/banner-1.webp', alt: 'A scenic blog banner — writing and life' },
+    { src: '/assets/banner-2.webp', alt: 'Blog banner — anime and frontend' },
+    { src: '/assets/banner-3.webp', alt: 'Blog banner — cozy corner of the internet' },
+    { src: '/assets/banner-4.webp', alt: 'Blog banner — thoughts worth sharing' },
   ];
 
   const SUBTITLES = [
@@ -58,8 +58,15 @@
 </script>
 
 <div class="banner-wrap {compact ? 'compact' : ''}">
-  {#each BANNERS as src, i}
-    <img src={src} class="banner-img" style="opacity:{i === imgIdx ? 1 : 0}" alt="" />
+  {#each BANNERS as banner, i}
+    <img
+      src={banner.src}
+      class="banner-img"
+      style="opacity:{i === imgIdx ? 1 : 0}"
+      alt={banner.alt}
+      loading={i === 0 ? 'eager' : 'lazy'}
+      fetchpriority={i === 0 ? 'high' : 'auto'}
+    />
   {/each}
   <div class="banner-overlay">
     <h1 class="banner-title">{title}</h1>

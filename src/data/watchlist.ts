@@ -110,119 +110,146 @@ const FALLBACK_WATCHLIST: WatchEntry[] = [
   },
 ];
 
+function simklHeaders(accessToken: string, clientId: string): Record<string, string> {
+  const h: Record<string, string> = { 'simkl-api-key': clientId };
+  if (accessToken) h['Authorization'] = `Bearer ${accessToken}`;
+  return h;
+}
+
+function simklPosterUrl(poster?: string): string | undefined {
+  if (!poster) return undefined;
+  if (poster.startsWith('http')) return poster;
+  // Simkl poster paths: "img/posters/{hash}" → full URL
+  return `https://simkl.in/posters/${poster}_m.jpg`;
+}
+
+async function simklFetch(url: string, accessToken: string, clientId: string): Promise<any[]> {
+  const res = await fetch(url, { headers: simklHeaders(accessToken, clientId) });
+  if (!res.ok) throw new Error(`Simkl ${res.status}: ${url}`);
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
 /**
- * Fetch user's actual watchlist from SIMKL API
+ * Fetch user's actual watchlist from SIMKL API.
+ * Requires SIMKL_ACCESS_TOKEN env var — run scripts/simkl-auth.mjs to obtain it.
  */
-export async function fetchWatchlistFromSimkl(simklUser: string, clientId: string): Promise<WatchEntry[]> {
+export async function fetchWatchlistFromSimkl(
+  simklUser: string,
+  clientId: string,
+  accessToken: string,
+): Promise<WatchEntry[]> {
+  if (!accessToken) {
+    console.warn('[Simkl] No access token — using fallback. Run scripts/simkl-auth.mjs.');
+    return FALLBACK_WATCHLIST;
+  }
+
   try {
-    const baseUrl = 'https://api.simkl.com/users';
-    const params = `?client_id=${clientId}`;
-    
-    const [completed_movies, completed_tv, watching_tv, plantowatch_movies, plantowatch_tv] = 
+    const base = `https://api.simkl.com/users/${simklUser}`;
+    const [completed_movies, completed_tv, watching_movies, watching_tv, plan_movies, plan_tv] =
       await Promise.all([
-        fetch(`${baseUrl}/${simklUser}/movies/completed${params}`).then(r => r.json()).catch(() => []),
-        fetch(`${baseUrl}/${simklUser}/tv/completed${params}`).then(r => r.json()).catch(() => []),
-        fetch(`${baseUrl}/${simklUser}/tv/watching${params}`).then(r => r.json()).catch(() => []),
-        fetch(`${baseUrl}/${simklUser}/movies/plantowatch${params}`).then(r => r.json()).catch(() => []),
-        fetch(`${baseUrl}/${simklUser}/tv/plantowatch${params}`).then(r => r.json()).catch(() => []),
+        simklFetch(`${base}/movies/completed`, accessToken, clientId),
+        simklFetch(`${base}/tv/completed`, accessToken, clientId),
+        simklFetch(`${base}/movies/watching`, accessToken, clientId),
+        simklFetch(`${base}/tv/watching`, accessToken, clientId),
+        simklFetch(`${base}/movies/plantowatch`, accessToken, clientId),
+        simklFetch(`${base}/tv/plantowatch`, accessToken, clientId),
       ]);
 
     const entries: WatchEntry[] = [];
 
-    // Process completed movies
-    if (Array.isArray(completed_movies)) {
-      entries.push(
-        ...completed_movies
-          .filter((e: any) => e.movie?.ids?.simkl)
-          .map((e: any) => ({
-            id: e.movie.ids.tmdb || e.movie.ids.simkl,
-            title: e.movie.title,
-            year: e.movie.year,
-            poster: e.movie.poster,
-            type: 'movie' as const,
-            status: 'completed' as const,
-            score: e.user_rating ? e.user_rating * 10 : undefined,
-          }))
-      );
+    for (const e of watching_movies) {
+      if (!e.movie?.title) continue;
+      entries.push({
+        id: e.movie.ids?.tmdb || e.movie.ids?.simkl || Math.random(),
+        title: e.movie.title,
+        year: e.movie.year,
+        poster: simklPosterUrl(e.movie.poster),
+        type: 'movie',
+        status: 'watching',
+        score: e.user_rating || undefined,
+      });
     }
 
-    // Process completed TV
-    if (Array.isArray(completed_tv)) {
-      entries.push(
-        ...completed_tv
-          .filter((e: any) => e.show?.ids?.simkl)
-          .map((e: any) => ({
-            id: e.show.ids.tmdb || e.show.ids.simkl,
-            title: e.show.title,
-            year: e.show.year,
-            poster: e.show.poster,
-            type: 'tv' as const,
-            status: 'completed' as const,
-            score: e.user_rating ? e.user_rating * 10 : undefined,
-            episodesWatched: e.watched_episodes_count,
-            episodesTotal: e.total_episodes,
-            seasons: e.seasons,
-          }))
-      );
+    for (const e of watching_tv) {
+      if (!e.show?.title) continue;
+      entries.push({
+        id: e.show.ids?.tmdb || e.show.ids?.simkl || Math.random(),
+        title: e.show.title,
+        year: e.show.year,
+        poster: simklPosterUrl(e.show.poster),
+        type: 'tv',
+        status: 'watching',
+        score: e.user_rating || undefined,
+        episodesWatched: e.watched_episodes_count,
+        episodesTotal: e.total_episodes_count,
+        seasons: e.seasons?.length,
+      });
     }
 
-    // Process watching TV (priority for featured)
-    if (Array.isArray(watching_tv)) {
-      entries.push(
-        ...watching_tv
-          .filter((e: any) => e.show?.ids?.simkl)
-          .map((e: any) => ({
-            id: e.show.ids.tmdb || e.show.ids.simkl,
-            title: e.show.title,
-            year: e.show.year,
-            poster: e.show.poster,
-            type: 'tv' as const,
-            status: 'watching' as const,
-            score: e.user_rating ? e.user_rating * 10 : undefined,
-            episodesWatched: e.watched_episodes_count,
-            episodesTotal: e.total_episodes,
-            seasons: e.seasons,
-          }))
-      );
+    for (const e of completed_movies) {
+      if (!e.movie?.title) continue;
+      entries.push({
+        id: e.movie.ids?.tmdb || e.movie.ids?.simkl || Math.random(),
+        title: e.movie.title,
+        year: e.movie.year,
+        poster: simklPosterUrl(e.movie.poster),
+        type: 'movie',
+        status: 'completed',
+        score: e.user_rating || undefined,
+      });
     }
 
-    // Process plan to watch movies
-    if (Array.isArray(plantowatch_movies)) {
-      entries.push(
-        ...plantowatch_movies
-          .filter((e: any) => e.movie?.ids?.simkl)
-          .map((e: any) => ({
-            id: e.movie.ids.tmdb || e.movie.ids.simkl,
-            title: e.movie.title,
-            year: e.movie.year,
-            poster: e.movie.poster,
-            type: 'movie' as const,
-            status: 'plan' as const,
-          }))
-      );
+    for (const e of completed_tv) {
+      if (!e.show?.title) continue;
+      entries.push({
+        id: e.show.ids?.tmdb || e.show.ids?.simkl || Math.random(),
+        title: e.show.title,
+        year: e.show.year,
+        poster: simklPosterUrl(e.show.poster),
+        type: 'tv',
+        status: 'completed',
+        score: e.user_rating || undefined,
+        episodesWatched: e.watched_episodes_count,
+        episodesTotal: e.total_episodes_count,
+        seasons: e.seasons?.length,
+      });
     }
 
-    // Process plan to watch TV
-    if (Array.isArray(plantowatch_tv)) {
-      entries.push(
-        ...plantowatch_tv
-          .filter((e: any) => e.show?.ids?.simkl)
-          .map((e: any) => ({
-            id: e.show.ids.tmdb || e.show.ids.simkl,
-            title: e.show.title,
-            year: e.show.year,
-            poster: e.show.poster,
-            type: 'tv' as const,
-            status: 'plan' as const,
-            episodesTotal: e.total_episodes,
-            seasons: e.seasons,
-          }))
-      );
+    for (const e of plan_movies) {
+      if (!e.movie?.title) continue;
+      entries.push({
+        id: e.movie.ids?.tmdb || e.movie.ids?.simkl || Math.random(),
+        title: e.movie.title,
+        year: e.movie.year,
+        poster: simklPosterUrl(e.movie.poster),
+        type: 'movie',
+        status: 'plan',
+      });
     }
 
-    return entries.length > 0 ? entries : FALLBACK_WATCHLIST;
+    for (const e of plan_tv) {
+      if (!e.show?.title) continue;
+      entries.push({
+        id: e.show.ids?.tmdb || e.show.ids?.simkl || Math.random(),
+        title: e.show.title,
+        year: e.show.year,
+        poster: simklPosterUrl(e.show.poster),
+        type: 'tv',
+        status: 'plan',
+        episodesTotal: e.total_episodes_count,
+        seasons: e.seasons?.length,
+      });
+    }
+
+    if (entries.length === 0) {
+      console.warn('[Simkl] API returned empty lists — using fallback.');
+      return FALLBACK_WATCHLIST;
+    }
+
+    return entries;
   } catch (err) {
-    console.warn('Failed to fetch SIMKL watchlist, using fallback:', err);
+    console.warn('[Simkl] Fetch failed, using fallback:', err);
     return FALLBACK_WATCHLIST;
   }
 }

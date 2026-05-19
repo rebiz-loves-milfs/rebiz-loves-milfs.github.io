@@ -57,7 +57,15 @@
     sliderEl.scrollBy({ left: dir * (160 + 12) * 3, behavior: 'smooth' });
   }
 
+  const CACHE_KEY = `anilist-list-${user}`;
+  const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
   onMount(() => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) { const { ts, data } = JSON.parse(raw); if (Date.now() - ts < CACHE_TTL) { entries = data; loading = false; } }
+    } catch {}
+
     const controller = new AbortController();
     const tid = setTimeout(() => controller.abort(), 9000);
     (async () => {
@@ -90,9 +98,10 @@
         }
         const seen = new Set();
         entries = flat.filter(e => { if (seen.has(e.id)) return false; seen.add(e.id); return true; });
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: entries })); } catch {}
       } catch(err) {
         if (err.name === 'AbortError') return;
-        entries = FALLBACK;
+        if (!entries.length) entries = FALLBACK;
       } finally {
         clearTimeout(tid);
         loading = false;

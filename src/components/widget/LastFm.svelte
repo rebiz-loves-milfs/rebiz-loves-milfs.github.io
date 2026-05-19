@@ -21,7 +21,16 @@
     return `${Math.floor(diff / 86400)}d ago`;
   }
 
+  const CACHE_KEY = `lfm-widget-${LASTFM.user}`;
+  const CACHE_TTL = 90 * 1000; // 90 seconds
+  const LFM_PLACEHOLDER = '2a96cbd8b46e442fc41c2b86b821562f';
+
   onMount(() => {
+    try {
+      const raw = sessionStorage.getItem(CACHE_KEY);
+      if (raw) { const { ts, data } = JSON.parse(raw); if (Date.now() - ts < CACHE_TTL) { tracks = data; state = 'live'; } }
+    } catch {}
+
     const controller = new AbortController();
     const tid = setTimeout(() => controller.abort(), 6000);
     (async () => {
@@ -30,19 +39,22 @@
         const res = await fetch(url, { signal: controller.signal });
         const json = await res.json();
         if (json.error) throw new Error(json.message);
-        tracks = (json.recenttracks?.track ?? []).map(t => ({
-          artist: t.artist?.['#text'] ?? 'Unknown',
-          title: t.name,
-          url: t.url ?? null,
-          cover: t.image?.find(i => i.size === 'medium')?.['#text'] || null,
-          nowPlaying: t['@attr']?.nowplaying === 'true',
-          when: t['@attr']?.nowplaying === 'true' ? 'now' : relativeTime(Number(t.date?.uts)),
-        }));
+        tracks = (json.recenttracks?.track ?? []).map(t => {
+          const img = t.image?.find(i => i.size === 'medium')?.['#text'];
+          return {
+            artist: t.artist?.['#text'] ?? 'Unknown',
+            title: t.name,
+            url: t.url ?? null,
+            cover: img && !img.includes(LFM_PLACEHOLDER) ? img : null,
+            nowPlaying: t['@attr']?.nowplaying === 'true',
+            when: t['@attr']?.nowplaying === 'true' ? 'now' : relativeTime(Number(t.date?.uts)),
+          };
+        });
         state = 'live';
+        try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: tracks })); } catch {}
       } catch(err) {
         if (err.name === 'AbortError') return;
-        tracks = fallback;
-        state = 'offline';
+        if (state !== 'live') { tracks = fallback; state = 'offline'; }
       } finally {
         clearTimeout(tid);
       }

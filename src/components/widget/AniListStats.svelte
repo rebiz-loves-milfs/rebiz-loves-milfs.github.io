@@ -29,7 +29,21 @@
   let genreData = [];
   let scoreData = [];
 
+  const CACHE_KEY = `anilist-stats-${user}`;
+  const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+  function applyStats(d) {
+    totalTitles = d.totalTitles; totalHours = d.totalHours; totalDays = d.totalDays;
+    meanScore = d.meanScore; genreData = d.genreData; scoreData = d.scoreData;
+    state = 'done';
+  }
+
   onMount(() => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) { const { ts, data } = JSON.parse(raw); if (Date.now() - ts < CACHE_TTL) applyStats(data); }
+    } catch {}
+
     const controller = new AbortController();
     const tid = setTimeout(() => controller.abort(), 6000);
 
@@ -62,7 +76,6 @@
           ? Math.round((scored.reduce((s, e) => s + e.score, 0) / scored.length) * 10) / 10
           : 0;
 
-        // Genre breakdown
         const genreMap = {};
         for (const e of allEntries)
           for (const g of e.media?.genres ?? []) genreMap[g] = (genreMap[g] ?? 0) + 1;
@@ -71,29 +84,24 @@
         const topN = full ? 10 : 6;
         const maxGenreCount = sortedGenres[0]?.[1] ?? 1;
         genreData = sortedGenres.slice(0, topN).map(([name, count]) => ({
-          name,
-          count,
+          name, count,
           pct: Math.round((count / totalTitles) * 100),
           barPct: Math.round((count / maxGenreCount) * 100),
         }));
 
-        // Score distribution 1–10
         const scoreDist = {};
         for (let i = 1; i <= 10; i++) scoreDist[i] = 0;
-        for (const e of allEntries) {
-          const s = Math.round(e.score);
-          if (s >= 1 && s <= 10) scoreDist[s]++;
-        }
+        for (const e of allEntries) { const s = Math.round(e.score); if (s >= 1 && s <= 10) scoreDist[s]++; }
         const maxCount = Math.max(...Object.values(scoreDist), 1);
         scoreData = Array.from({ length: 10 }, (_, i) => ({
-          label: i + 1,
-          count: scoreDist[i + 1],
+          label: i + 1, count: scoreDist[i + 1],
           heightPct: Math.round((scoreDist[i + 1] / maxCount) * 100),
         }));
 
         state = 'done';
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: { totalTitles, totalHours, totalDays, meanScore, genreData, scoreData } })); } catch {}
       } catch (err) {
-        if (err.name !== 'AbortError') state = 'error';
+        if (err.name !== 'AbortError' && state !== 'done') state = 'error';
       } finally {
         clearTimeout(tid);
       }

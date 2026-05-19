@@ -1,7 +1,8 @@
 <script>
-  import { onMount } from 'svelte';
-  import { WATCHLIST, posterUrl, fetchWatchlistFromSimkl } from '../data/watchlist';
-  import { SIMKL } from '../config';
+  import { posterUrl } from '../data/watchlist';
+
+  /** @type {import('../data/watchlist').WatchEntry[]} Pre-fetched at build time from movies.astro */
+  export let entries = [];
 
   const STATUS_COLOR = {
     watching:  'oklch(0.62 0.18 200)',
@@ -29,21 +30,6 @@
   let typeFilter   = 'all';
   let statusFilter = 'all';
   let sliderEl;
-  let entries = WATCHLIST;
-
-  // Fetch real data from SIMKL on mount
-  onMount(async () => {
-    if (SIMKL.user && SIMKL.clientId) {
-      try {
-        const simklData = await fetchWatchlistFromSimkl(SIMKL.user, SIMKL.clientId);
-        if (simklData && simklData.length > 0) {
-          entries = simklData;
-        }
-      } catch (err) {
-        console.warn('Failed to fetch SIMKL data, using fallback:', err);
-      }
-    }
-  });
 
   $: watching  = entries.filter(e => e.status === 'watching');
   $: featured  = watching[0] ?? null;

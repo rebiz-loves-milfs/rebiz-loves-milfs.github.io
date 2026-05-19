@@ -6,6 +6,13 @@ import LastFm from '../components/widget/LastFm.svelte';
 import SimklStats from '../components/widget/SimklStats.svelte';
 import Watchlist from '../components/Watchlist.svelte';
 import { SIMKL } from '../config';
+import { fetchWatchlistFromSimkl } from '../data/watchlist';
+
+const watchlistEntries = await fetchWatchlistFromSimkl(
+  SIMKL.user,
+  SIMKL.clientId,
+  SIMKL.accessToken,
+);
 ---
 
 <Layout pathname="/movies" title="Movies & Shows">
@@ -17,7 +24,7 @@ import { SIMKL } from '../config';
     </aside>
     <main>
       <div class="card movies-wrap">
-        <Watchlist client:load />
+        <Watchlist entries={watchlistEntries} client:load />
       </div>
     </main>
     <aside class="sidebar-right">

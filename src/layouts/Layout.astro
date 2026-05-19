@@ -53,6 +53,8 @@ const searchPosts = allPosts.map(p => ({
   <meta name="description" content={description} />
   <link rel="canonical" href={canonicalURL} />
   <link rel="icon" href="/assets/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon.ico" />
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
@@ -69,9 +71,32 @@ const searchPosts = allPosts.map(p => ({
   <meta name="twitter:image" content={ogImg} />
   {AUTHOR.socials.twitter && <meta name="twitter:creator" content={AUTHOR.socials.twitter} />}
 
+  <!-- Schema.org structured data -->
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": SITE.title,
+    "url": SITE.url,
+    "description": description,
+    "author": {
+      "@type": "Person",
+      "name": AUTHOR.name,
+    },
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": `${SITE.url}/?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  })} />
+
+  <link rel="preconnect" href="https://code.iconify.design" />
+  <link rel="preconnect" href="https://api.lanyard.rest" />
+  <link rel="preconnect" href="https://cdn.discordapp.com" crossorigin />
+  <link rel="preconnect" href="https://ws.audioscrobbler.com" />
+  <link rel="dns-prefetch" href="https://lastfm.freetls.fastly.net" />
   <slot name="head" />
   <ClientRouter />
-  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+  <script defer src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
   <script define:vars={{ defaultHue: THEME.defaultHue }}>
     function applyTheme() {
       const d = localStorage.getItem('dark') === 'true';

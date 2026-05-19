@@ -188,11 +188,19 @@
     position: absolute; inset: 0;
     clip-path: polygon(0% 0%, 100% 0%, 0% 100%);
     background: linear-gradient(135deg,
-      oklch(0.96 0.005 30) 0%,
-      oklch(0.90 0.008 30) 55%,
-      oklch(0.80 0.010 30) 100%
+      oklch(0.88 0.012 30) 0%,
+      oklch(0.82 0.016 30) 55%,
+      oklch(0.72 0.018 30) 100%
     );
     filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.30));
+  }
+
+  :global(.dark) .peel-fold {
+    background: linear-gradient(135deg,
+      oklch(0.22 0.012 30) 0%,
+      oklch(0.18 0.010 30) 55%,
+      oklch(0.14 0.008 30) 100%
+    );
   }
 
   .peel-crease {

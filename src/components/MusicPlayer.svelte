@@ -1,6 +1,8 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
 
+  export let inline = false;
+
   const TRACKS = [
     { title: 'Tabi no Tochuu', artist: 'Natsumi Inoue', album: 'Spice and Wolf OST', cover: '/assets/default-logo.webp', duration: 214 },
     { title: 'Distant Journey', artist: 'Kenji Ito', album: 'SaGa Frontier', cover: '/assets/default-logo.webp', duration: 183 },
@@ -86,13 +88,8 @@
   onDestroy(() => clearInterval(interval));
 </script>
 
-<div class="mp-fab-wrap">
-  <button class="mp-fab" on:click={() => open = !open} title="Music Player">
-    <iconify-icon icon={playing ? 'material-symbols:music-note' : 'material-symbols:music-note-outline'} width="18"></iconify-icon>
-  </button>
-
-  {#if open}
-  <div class="mp-panel">
+{#if inline}
+  <div class="mp-inline">
     <div class="mp-cover-row">
       <img class="mp-cover" src={track.cover} alt={track.title} />
       <div class="mp-info">
@@ -141,10 +138,71 @@
       {/each}
     </div>
   </div>
-  {/if}
-</div>
+{:else}
+  <div class="mp-fab-wrap">
+    <button class="mp-fab" on:click={() => open = !open} title="Music Player">
+      <iconify-icon icon={playing ? 'material-symbols:music-note' : 'material-symbols:music-note-outline'} width="18"></iconify-icon>
+    </button>
+
+    {#if open}
+    <div class="mp-panel">
+      <div class="mp-cover-row">
+        <img class="mp-cover" src={track.cover} alt={track.title} />
+        <div class="mp-info">
+          <div class="mp-title">{track.title}</div>
+          <div class="mp-artist">{track.artist}</div>
+          <div class="mp-album">{track.album}</div>
+        </div>
+      </div>
+
+      <div class="mp-seek" role="slider" aria-valuenow={progressPct} aria-valuemin={0} aria-valuemax={100} aria-label="Seek" tabindex="0" on:click={seek} on:keydown={e => (e.key === 'ArrowRight' && (progress = Math.min(track.duration, progress + 5))) || (e.key === 'ArrowLeft' && (progress = Math.max(0, progress - 5)))}>
+        <div class="mp-seek-fill" style="width:{progressPct}%"></div>
+      </div>
+      <div class="mp-time">
+        <span>{timeStr}</span>
+        <span>{durStr}</span>
+      </div>
+
+      <div class="mp-controls">
+        <button class="mp-btn {shuffle ? 'active' : ''}" on:click={() => shuffle = !shuffle} title="Shuffle">
+          <iconify-icon icon="material-symbols:shuffle" width="16"></iconify-icon>
+        </button>
+        <button class="mp-btn" on:click={prevTrack} title="Previous">
+          <iconify-icon icon="material-symbols:skip-previous" width="20"></iconify-icon>
+        </button>
+        <button class="mp-btn play" on:click={togglePlay} title={playing ? 'Pause' : 'Play'}>
+          <iconify-icon icon={playing ? 'material-symbols:pause' : 'material-symbols:play-arrow'} width="22"></iconify-icon>
+        </button>
+        <button class="mp-btn" on:click={nextTrack} title="Next">
+          <iconify-icon icon="material-symbols:skip-next" width="20"></iconify-icon>
+        </button>
+        <button class="mp-btn {loop ? 'active' : ''}" on:click={() => loop = !loop} title="Loop">
+          <iconify-icon icon="material-symbols:repeat" width="16"></iconify-icon>
+        </button>
+      </div>
+
+      <div class="mp-queue">
+        {#each TRACKS as t, i}
+          <button class="mp-queue-item {i === currentIndex ? 'current' : ''}" on:click={() => selectTrack(i)}>
+            <span class="mp-q-num">{i + 1}</span>
+            <span class="mp-q-info">
+              <span class="mp-q-title">{t.title}</span>
+              <span class="mp-q-artist">{t.artist}</span>
+            </span>
+            <span class="mp-q-dur">{fmtTime(t.duration)}</span>
+          </button>
+        {/each}
+      </div>
+    </div>
+    {/if}
+  </div>
+{/if}
 
 <style>
+  .mp-inline {
+    width: 100%;
+  }
+
   .mp-fab-wrap {
     position: fixed;
     bottom: 24px;

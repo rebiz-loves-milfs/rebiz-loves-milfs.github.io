@@ -1,0 +1,81 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Banner from '../components/Banner.svelte';
+import Profile from '../components/widget/Profile.astro';
+import SiteStats from '../components/widget/SiteStats.astro';
+import MusicFull from '../components/MusicFull.svelte';
+import YouTubePlaylist from '../components/YouTubePlaylist.svelte';
+import { LASTFM, MUSIC_QUOTES } from '../config';
+import TopGenres from '../components/widget/TopGenres.svelte';
+
+const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+const dailyQuote = MUSIC_QUOTES[dayOfYear % MUSIC_QUOTES.length];
+---
+
+<Layout pathname="/music" title="Music">
+  <Banner client:load compact title="Music" subtitle="What I've been listening to" />
+  <div class="grid three-col">
+
+    <aside class="sidebar">
+      <Profile />
+      <SiteStats />
+
+      <div class="card genres-card">
+        <TopGenres client:load />
+      </div>
+
+      <div class="card lfm-profile-card">
+        <div class="widget-title">
+          <iconify-icon icon="fa7-brands:lastfm" width="11"></iconify-icon>
+          Last.fm — @{LASTFM.user}
+        </div>
+        <a
+          href={`https://www.last.fm/user/${LASTFM.user}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="lfm-profile-link"
+        >
+          View full profile →
+        </a>
+      </div>
+    </aside>
+
+    <main>
+      <div class="card music-main">
+        <MusicFull client:load />
+      </div>
+    </main>
+
+    <aside class="sidebar-right">
+      <div class="card yt-card">
+        <YouTubePlaylist client:load />
+      </div>
+
+      <div class="card quote-card">
+        <div class="widget-title">Quote of the day</div>
+        <blockquote class="music-quote">"{dailyQuote.text}"</blockquote>
+        <p class="quote-source">— {dailyQuote.author}</p>
+      </div>
+    </aside>
+
+  </div>
+</Layout>
+
+<style>
+  .music-main { padding: 20px 18px; min-width: 0; overflow: hidden; }
+  .yt-card { padding: 16px 18px; }
+
+  .genres-card { background: var(--card-bg); border-radius: var(--radius-large); padding: 16px 18px; }
+
+.lfm-profile-card { padding: 14px 18px; }
+  .lfm-profile-link { font-size: 12.5px; color: var(--primary); text-decoration: none; }
+  .lfm-profile-link:hover { text-decoration: underline; }
+
+  .quote-card { background: var(--card-bg); border-radius: var(--radius-large); padding: 16px 18px; }
+  .music-quote {
+    font-family: var(--font-display); font-size: 13.5px; font-style: italic;
+    color: var(--fg-2); line-height: 1.6; margin: 0 0 8px;
+    border-left: 2px solid var(--primary); padding-left: 10px;
+  }
+  .quote-source { font-size: 11px; color: var(--fg-3); font-family: var(--font-mono); margin: 0; }
+</style>

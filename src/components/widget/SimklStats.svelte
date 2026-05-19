@@ -60,8 +60,17 @@
     return total > 0 ? Math.round((count / total) * 100) : 0;
   }
 
+  const CACHE_KEY = `simkl-stats-${user}`;
+  const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
   onMount(() => {
     if (!user || !clientId) { state = 'unconfigured'; return; }
+
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) { const { ts, data } = JSON.parse(raw); if (Date.now() - ts < CACHE_TTL) { stats = data; state = 'done'; } }
+    } catch {}
+
     const controller = new AbortController();
     const tid = setTimeout(() => controller.abort(), 8000);
     (async () => {
@@ -75,8 +84,9 @@
         if (!json?.total_mins) throw new Error('Empty');
         stats = json;
         state = 'done';
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: json })); } catch {}
       } catch (err) {
-        if (err.name !== 'AbortError') state = 'error';
+        if (err.name !== 'AbortError' && state !== 'done') state = 'error';
       } finally { clearTimeout(tid); }
     })();
     return () => { clearTimeout(tid); controller.abort(); };
