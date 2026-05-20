@@ -21,6 +21,11 @@ export const AUTHOR = {
   },
 };
 
+// Get a free key at web3forms.com, then set PUBLIC_WEB3FORMS_KEY in .env
+export const WEB3FORMS_KEY = (
+  import.meta.env.PUBLIC_WEB3FORMS_KEY ?? ""
+).trim();
+
 export const LASTFM = {
   user: "notrebiz",
   key: (import.meta.env.PUBLIC_LASTFM_API_KEY ?? "").trim(),

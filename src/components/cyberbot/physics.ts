@@ -122,9 +122,11 @@ export function restoreElement(f: FallState): void {
   f.el.style.left = `${f.origX}px`;
   f.el.style.transform = "rotate(0deg)";
 
-  // After the transition completes, put the original style back
+  // After the transition, move element to <body> as position:absolute so it
+  // scrolls with the page but stays out of the original DOM slot
+  // (elements that shifted to fill the gap remain in their new positions).
   setTimeout(() => {
-    if (f.origStyle) f.el.setAttribute("style", f.origStyle);
-    else f.el.removeAttribute("style");
+    document.body.appendChild(f.el);
+    f.el.style.cssText = `position:absolute;left:${f.origX + window.scrollX}px;top:${f.origY + window.scrollY}px;width:${f.w}px;height:${f.h}px;z-index:1;pointer-events:auto;box-sizing:border-box;margin:0;`;
   }, 750);
 }

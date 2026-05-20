@@ -153,6 +153,7 @@
   color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   transition: color 120ms;
+  padding: 6px 2px;
 }
 .featured-cat:hover {
   color: oklch(0.92 0.12 var(--hue));

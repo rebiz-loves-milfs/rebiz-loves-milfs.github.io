@@ -50,7 +50,7 @@
   <div class="nav-links" role="list">
     {#each NAV_LINKS as link}
       {#if link.children}
-        <div class="nav-dropdown" style="position:relative">
+        <div class="nav-dropdown" role="listitem" style="position:relative">
           <button
             class="nav-link nav-dropdown-btn {isDropdownActive(link.children) ? 'active' : ''}"
             aria-expanded={mediaOpen}
@@ -85,6 +85,7 @@
       {:else}
         <a
           href={link.path}
+          role="listitem"
           class="nav-link {isActive(link.path) ? 'active' : ''}"
           data-route={link.path.replace('/', '') || 'home'}
         >

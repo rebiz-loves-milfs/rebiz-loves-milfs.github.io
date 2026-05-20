@@ -383,19 +383,25 @@ body {
   user-select: none;
 }
 /* Allow selecting inside inputs/textareas */
-input, textarea, [contenteditable] {
+input,
+textarea,
+[contenteditable] {
   -webkit-user-select: text;
   -moz-user-select: text;
   user-select: text;
 }
-img, video {
+img,
+video {
   -webkit-user-drag: none;
   user-drag: none;
   pointer-events: none;
 }
 /* Nuke page on print */
 @media print {
-  html, body { display: none !important; }
+  html,
+  body {
+    display: none !important;
+  }
 }
 /* Watermark canvas overlay — populated by DRM script */
 #drm-watermark {

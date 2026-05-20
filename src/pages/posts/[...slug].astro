@@ -40,6 +40,157 @@ const jsonLd = {
 <Layout pathname={`/posts/${post.id}`} title={title} description={description} ogImage={image || undefined}>
   <Fragment slot="head">
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <script is:inline>
+      let _mermaid = null;
+
+      function isDark() {
+        return document.documentElement.classList.contains('dark');
+      }
+
+      function makePannable(wrapper) {
+        const svg = wrapper.querySelector('svg');
+        if (!svg) return;
+        svg.style.cursor = 'grab';
+        svg.style.userSelect = 'none';
+        svg.style.touchAction = 'none';
+
+        let ox = 0, oy = 0, dx = 0, dy = 0, scale = 1, dragging = false;
+
+        function applyTransform() {
+          svg.style.transform = `translate(${dx}px,${dy}px) scale(${scale})`;
+          svg.style.transformOrigin = '0 0';
+        }
+
+        svg.addEventListener('pointerdown', e => {
+          dragging = true;
+          ox = e.clientX - dx;
+          oy = e.clientY - dy;
+          svg.style.cursor = 'grabbing';
+          svg.setPointerCapture(e.pointerId);
+        });
+        svg.addEventListener('pointermove', e => {
+          if (!dragging) return;
+          dx = e.clientX - ox;
+          dy = e.clientY - oy;
+          applyTransform();
+        });
+        svg.addEventListener('pointerup', () => { dragging = false; svg.style.cursor = 'grab'; });
+        svg.addEventListener('pointercancel', () => { dragging = false; svg.style.cursor = 'grab'; });
+
+        wrapper.addEventListener('wheel', e => {
+          e.preventDefault();
+          const rect = wrapper.getBoundingClientRect();
+          const mx = e.clientX - rect.left;
+          const my = e.clientY - rect.top;
+          const delta = e.deltaY > 0 ? 0.85 : 1.18;
+          const newScale = Math.min(Math.max(scale * delta, 0.2), 8);
+          dx = mx - (mx - dx) * (newScale / scale);
+          dy = my - (my - dy) * (newScale / scale);
+          scale = newScale;
+          applyTransform();
+        }, { passive: false });
+
+        // double-click to reset
+        svg.addEventListener('dblclick', () => {
+          dx = 0; dy = 0; scale = 1;
+          applyTransform();
+        });
+      }
+
+      async function renderMermaid(theme) {
+        if (!_mermaid) return;
+        _mermaid.initialize({
+          startOnLoad: false,
+          theme,
+          securityLevel: 'loose',
+          flowchart: { useMaxWidth: false },
+          sequence:   { useMaxWidth: false },
+          gantt:      { useMaxWidth: false },
+        });
+        const wrappers = document.querySelectorAll('.mermaid-wrap');
+        for (const wrap of wrappers) {
+          const src = wrap.dataset.src;
+          const id = 'mermaid-' + Math.random().toString(36).slice(2);
+          try {
+            const { svg } = await _mermaid.render(id, src);
+            wrap.innerHTML = svg;
+            const svgEl = wrap.querySelector('svg');
+            if (svgEl) {
+              svgEl.style.overflow = 'visible';
+              // textLength forces a fixed width that truncates long labels
+              svgEl.querySelectorAll('text[textLength]').forEach(el => {
+                el.removeAttribute('textLength');
+                el.removeAttribute('lengthAdjust');
+              });
+              svgEl.querySelectorAll('[clip-path]').forEach(el => el.removeAttribute('clip-path'));
+              svgEl.querySelectorAll('clipPath').forEach(el => el.remove());
+            }
+            makePannable(wrap);
+          } catch(e) {
+            console.warn('Mermaid render failed', e);
+          }
+        }
+      }
+
+      async function initMermaid() {
+        const blocks = document.querySelectorAll('pre[data-language="mermaid"]');
+        if (!blocks.length) return;
+
+        if (!_mermaid) {
+          const mod = await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs');
+          _mermaid = mod.default;
+        }
+
+        // Replace pre blocks with pannable wrappers
+        blocks.forEach(pre => {
+          const src = pre.querySelector('code')?.textContent?.trim() ?? '';
+          const wrap = document.createElement('div');
+          wrap.className = 'mermaid-wrap';
+          wrap.dataset.src = src;
+          pre.replaceWith(wrap);
+        });
+
+        await renderMermaid(isDark() ? 'dark' : 'default');
+      }
+
+      // Theme change observer — watches for dark class toggle on <html>
+      const _themeObs = new MutationObserver(() => {
+        const wrappers = document.querySelectorAll('.mermaid-wrap');
+        if (wrappers.length) renderMermaid(isDark() ? 'dark' : 'default');
+      });
+      _themeObs.observe(document.documentElement, { attributeFilter: ['class'] });
+
+      document.addEventListener('DOMContentLoaded', initMermaid);
+      document.addEventListener('astro:page-load', initMermaid);
+    </script>
+    <style is:inline>
+      .mermaid-wrap {
+        overflow: hidden;
+        position: relative;
+        border-radius: 0.75rem;
+        border: 1px solid var(--border);
+        background: var(--btn-regular-bg);
+        margin: 1.5rem 0;
+        min-height: 60px;
+        cursor: grab;
+      }
+      .mermaid-wrap svg {
+        display: block;
+        max-width: none;
+        will-change: transform;
+      }
+      .mermaid-wrap::after {
+        content: 'scroll to zoom · drag to pan · double-click to reset';
+        position: absolute;
+        bottom: 6px;
+        right: 10px;
+        font-size: 10px;
+        color: var(--fg-4);
+        pointer-events: none;
+        font-family: var(--font-mono);
+        opacity: 0.7;
+      }
+    </style>
   </Fragment>
   <Banner client:load compact title={title} subtitle={description} />
   <div class="grid">

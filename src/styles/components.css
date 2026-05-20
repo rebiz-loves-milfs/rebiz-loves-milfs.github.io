@@ -163,7 +163,7 @@
   border-radius: 999px;
   object-fit: cover;
 }
-.profile h4 {
+.profile h2 {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 24px;
@@ -217,7 +217,7 @@
   justify-content: center;
   flex-shrink: 0;
 }
-.announce h5 {
+.announce h3 {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.04em;

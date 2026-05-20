@@ -354,7 +354,7 @@
     height: 100px;
   }
 
-  .profile h4 {
+  .profile h2 {
     font-size: 18px;
   }
 
@@ -572,7 +572,7 @@
   }
 
   /* Announcements and alerts */
-  .announce h5 {
+  .announce h3 {
     font-size: 11px;
   }
 

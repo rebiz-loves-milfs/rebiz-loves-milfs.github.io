@@ -20,8 +20,8 @@
       : null;
 
     const endpoint = alreadyViewed
-      ? `https://api.countapi.xyz/get/${NAMESPACE}/${slug}`
-      : `https://api.countapi.xyz/hit/${NAMESPACE}/${slug}`;
+      ? `https://api.counterapi.dev/v1/${NAMESPACE}/${slug}`
+      : `https://api.counterapi.dev/v1/${NAMESPACE}/${slug}/up`;
 
     const controller = new AbortController();
     const tid = setTimeout(() => controller.abort(), 5000);
@@ -29,8 +29,8 @@
     fetch(endpoint, { signal: controller.signal })
       .then(r => r.json())
       .then(data => {
-        if (typeof data.value === 'number') {
-          count = data.value;
+        if (typeof data.count === 'number') {
+          count = data.count;
           if (!alreadyViewed && typeof localStorage !== 'undefined') {
             localStorage.setItem(storageKey, '1');
           }

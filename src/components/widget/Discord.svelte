@@ -71,6 +71,7 @@
         {/if}
         <span
           class="dc-dot"
+          role="img"
           style="background:{status === 'offline' ? 'var(--fg-4)' : `oklch(0.65 0.18 ${statusColor[status] ?? 145})`}"
           title={statusLabel[status] ?? status}
           aria-label={statusLabel[status] ?? status}
