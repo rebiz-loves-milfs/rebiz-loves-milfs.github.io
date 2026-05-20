@@ -1,0 +1,1 @@
+when i type in search bar and query is too long a horizontal scrool bar appears but it is not cohhernet with design of site looks basic html fix it

@@ -127,12 +127,12 @@ const searchPosts = allPosts
     </div>
     <Footer />
     <MusicPlayer client:load />
-    <CyberBot client:idle transition:persist="cyberbot" />
-    <PagePeel client:idle transition:persist="pagepeel" />
-    <Terminal client:idle transition:persist="terminal" />
-    <CursorTrail client:idle transition:persist="cursortrail" />
-    <AtmosphereLoop client:idle transition:persist="atmosphere" />
-    <TypingSFX client:idle transition:persist="typingsfx" />
+    <CyberBot client:only="svelte" />
+    <PagePeel client:only="svelte" />
+    <Terminal client:idle />
+    <CursorTrail client:idle />
+    <AtmosphereLoop client:idle />
+    <TypingSFX client:idle />
   </div>
   <script>
     // Konami code → matrix chaos

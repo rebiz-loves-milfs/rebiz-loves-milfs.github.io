@@ -22,7 +22,7 @@ export const AUTHOR = {
 
 export const LASTFM = {
   user: 'notrebiz',
-  key: import.meta.env.PUBLIC_LASTFM_API_KEY ?? '',
+  key: (import.meta.env.PUBLIC_LASTFM_API_KEY ?? '').trim(),
 };
 
 export const DISCORD_USER_ID = '1296550727652610189';

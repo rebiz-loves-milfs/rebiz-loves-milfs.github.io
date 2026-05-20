@@ -26,6 +26,13 @@
   const LFM_PLACEHOLDER = '2a96cbd8b46e442fc41c2b86b821562f';
 
   onMount(() => {
+    // If no API key is configured, show fallback data and mark as offline
+    if (!LASTFM.key) {
+      tracks = fallback;
+      state = 'offline';
+      return;
+    }
+
     try {
       const raw = sessionStorage.getItem(CACHE_KEY);
       if (raw) { const { ts, data } = JSON.parse(raw); if (Date.now() - ts < CACHE_TTL) { tracks = data; state = 'live'; } }

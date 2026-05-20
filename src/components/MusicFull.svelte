@@ -65,6 +65,10 @@
   }
 
   async function loadRecent() {
+    if (!LASTFM.key) {
+      state = 'error';
+      return;
+    }
     const cached = getRecentCache();
     if (cached) { recent = cached; state = 'ok'; }
     else state = 'loading';
@@ -90,6 +94,10 @@
   }
 
   async function loadTopTracks() {
+    if (!LASTFM.key) {
+      state = 'error';
+      return;
+    }
     state = 'loading';
     try {
       const json = await lfm({ method: 'user.gettoptracks', limit: '30', period });
@@ -109,6 +117,10 @@
   }
 
   async function loadTopArtists() {
+    if (!LASTFM.key) {
+      state = 'error';
+      return;
+    }
     state = 'loading';
     try {
       const json = await lfm({ method: 'user.gettopartists', limit: '30', period });
@@ -127,6 +139,10 @@
   }
 
   async function loadTopAlbums() {
+    if (!LASTFM.key) {
+      state = 'error';
+      return;
+    }
     state = 'loading';
     try {
       const json = await lfm({ method: 'user.gettopalbums', limit: '30', period });
@@ -146,6 +162,10 @@
   }
 
   function load() {
+    if (!LASTFM.key) {
+      state = 'error';
+      return;
+    }
     if (tab === 'recent')  return loadRecent();
     if (tab === 'tracks')  return loadTopTracks();
     if (tab === 'artists') return loadTopArtists();
