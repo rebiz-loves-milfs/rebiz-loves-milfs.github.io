@@ -70,7 +70,12 @@
     }, { passive: true });
 
     // ── Re-run state on Astro view transitions ────────────────────
-    document.addEventListener('astro:after-swap', () => set(null));
+    document.addEventListener('astro:after-swap', () => {
+      if (!document.getElementById('mk-cursor')) {
+        document.body.appendChild(cursor);
+      }
+      set(null);
+    });
 
     return () => {
       cancelAnimationFrame(raf);

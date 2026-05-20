@@ -1,0 +1,136 @@
+---
+import type { Page } from 'astro';
+
+interface Props {
+  page: Page<any>;
+}
+
+const { page } = Astro.props;
+
+const HIDDEN = -1;
+const ADJ_DIST = 2;
+const VISIBLE = ADJ_DIST * 2 + 1;
+
+let count = 1;
+let l = page.currentPage;
+let r = page.currentPage;
+while (0 < l - 1 && r + 1 <= page.lastPage && count + 2 <= VISIBLE) {
+  count += 2; l--; r++;
+}
+while (0 < l - 1 && count < VISIBLE) { count++; l--; }
+while (r + 1 <= page.lastPage && count < VISIBLE) { count++; r++; }
+
+const pages: number[] = [];
+if (l > 1) pages.push(1);
+if (l === 3) pages.push(2);
+if (l > 3) pages.push(HIDDEN);
+for (let i = l; i <= r; i++) pages.push(i);
+if (r < page.lastPage - 2) pages.push(HIDDEN);
+if (r === page.lastPage - 2) pages.push(page.lastPage - 1);
+if (r < page.lastPage) pages.push(page.lastPage);
+
+const getPageUrl = (p: number) => p === 1 ? '/' : `/${p}/`;
+---
+
+{page.lastPage > 1 && (
+  <nav class="pagination" aria-label="Post pages">
+    <a
+      href={page.currentPage > 1 ? getPageUrl(page.currentPage - 1) : '#'}
+      class:list={['pg-btn', { 'pg-btn-disabled': page.currentPage <= 1 }]}
+      aria-disabled={page.currentPage <= 1}
+      aria-label="Previous page"
+    >
+      <iconify-icon icon="material-symbols:chevron-left-rounded" width="22"></iconify-icon>
+    </a>
+
+    <div class="pg-nums">
+      {pages.map(p => p === HIDDEN
+        ? <span class="pg-ellipsis"><iconify-icon icon="material-symbols:more-horiz" width="18"></iconify-icon></span>
+        : p === page.currentPage
+          ? <span class="pg-num pg-num-active" aria-current="page">{p}</span>
+          : <a href={getPageUrl(p)} class="pg-num" aria-label={`Page ${p}`}>{p}</a>
+      )}
+    </div>
+
+    <a
+      href={page.currentPage < page.lastPage ? getPageUrl(page.currentPage + 1) : '#'}
+      class:list={['pg-btn', { 'pg-btn-disabled': page.currentPage >= page.lastPage }]}
+      aria-disabled={page.currentPage >= page.lastPage}
+      aria-label="Next page"
+    >
+      <iconify-icon icon="material-symbols:chevron-right-rounded" width="22"></iconify-icon>
+    </a>
+  </nav>
+)}
+
+<style>
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px 0 8px;
+  }
+
+  .pg-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-large);
+    color: var(--primary);
+    text-decoration: none;
+    transition: border-color 150ms, background 150ms, transform 120ms;
+    flex-shrink: 0;
+  }
+  .pg-btn:hover:not(.pg-btn-disabled) {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+    transform: translateY(-1px);
+  }
+  .pg-btn-disabled {
+    color: var(--fg-4);
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
+  .pg-nums {
+    display: flex;
+    align-items: center;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-large);
+    overflow: hidden;
+    gap: 2px;
+    padding: 4px;
+  }
+
+  .pg-num {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: calc(var(--radius-large) - 4px);
+    font-family: var(--font-mono);
+    font-size: 13px; font-weight: 700;
+    color: var(--fg-1);
+    text-decoration: none;
+    transition: background 150ms, color 150ms, transform 120ms;
+    flex-shrink: 0;
+  }
+  .pg-num:hover:not(.pg-num-active) {
+    background: var(--primary-soft);
+    color: var(--primary);
+    transform: translateY(-1px);
+  }
+  .pg-num-active {
+    background: var(--primary);
+    color: white;
+    pointer-events: none;
+  }
+
+  .pg-ellipsis {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--fg-3);
+    flex-shrink: 0;
+  }
+</style>

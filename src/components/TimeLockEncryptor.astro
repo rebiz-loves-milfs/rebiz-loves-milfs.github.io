@@ -1,0 +1,15 @@
+---
+import CryptoJS from 'crypto-js';
+import TimeLock from './TimeLock.svelte';
+
+interface Props {
+  unlockAt: Date;
+}
+
+const { unlockAt } = Astro.props;
+const html = await Astro.slots.render('default');
+const key = String(unlockAt.getTime());
+const encryptedContent = CryptoJS.AES.encrypt('MIZUKI-TIMELOCK:' + html, key).toString();
+---
+
+<TimeLock client:load {unlockAt} encryptedContent={encryptedContent} />

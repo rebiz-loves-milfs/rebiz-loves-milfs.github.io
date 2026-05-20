@@ -35,13 +35,16 @@ const canonicalURL = new URL(pathname, SITE.url).href;
 const ogImg = new URL(ogImage ?? SITE.ogImage, SITE.url).href;
 
 const allPosts = await getSortedPosts();
-const searchPosts = allPosts.map(p => ({
-  id: p.id,
-  title: p.data.title,
-  description: p.data.description ?? '',
-  category: p.data.category ?? '',
-  tags: p.data.tags,
-}));
+const now = new Date();
+const searchPosts = allPosts
+  .filter(p => !p.data.encrypted && !(p.data.unlockAt && now < p.data.unlockAt))
+  .map(p => ({
+    id: p.id,
+    title: p.data.title,
+    description: p.data.description ?? '',
+    category: p.data.category ?? '',
+    tags: p.data.tags,
+  }));
 ---
 
 <!doctype html>
@@ -51,6 +54,7 @@ const searchPosts = allPosts.map(p => ({
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{pageTitle}</title>
   <meta name="description" content={description} />
+  <link rel="preload" href="/fonts/ZenMaruGothic-Medium.ttf" as="font" crossorigin="anonymous" />
   <link rel="canonical" href={canonicalURL} />
   <link rel="icon" href="/assets/favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon.ico" />
@@ -98,15 +102,18 @@ const searchPosts = allPosts.map(p => ({
   <ClientRouter />
   <script defer src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
   <script define:vars={{ defaultHue: THEME.defaultHue }}>
-    function applyTheme() {
+    function applyTheme(el) {
       const d = localStorage.getItem('dark') === 'true';
       const h = parseInt(localStorage.getItem('hue') ?? defaultHue, 10) || defaultHue;
-      document.documentElement.classList.toggle('dark', d);
-      document.documentElement.style.setProperty('--hue', String(h));
+      el.classList.toggle('dark', d);
+      el.style.setProperty('--hue', String(h));
     }
-    applyTheme();
-    // Re-apply after every client-side navigation swap so dark mode survives tab changes
-    document.addEventListener('astro:after-swap', applyTheme);
+    applyTheme(document.documentElement);
+    // Pre-apply to the incoming document before the DOM swap so the new page
+    // never renders with default (white) CSS variables — catches fast navigation
+    // where the View Transition is cancelled and falls back to a raw swap.
+    document.addEventListener('astro:before-swap', (e) => applyTheme(e.newDocument.documentElement));
+    document.addEventListener('astro:after-swap', () => applyTheme(document.documentElement));
   </script>
 </head>
 <body>
@@ -120,12 +127,12 @@ const searchPosts = allPosts.map(p => ({
     </div>
     <Footer />
     <MusicPlayer client:load />
-    <CyberBot client:only="svelte" transition:persist="cyberbot" />
-    <PagePeel client:only="svelte" transition:persist="pagepeel" />
-    <Terminal client:only="svelte" transition:persist="terminal" />
-    <CursorTrail client:only="svelte" transition:persist="cursortrail" />
-    <AtmosphereLoop client:only="svelte" transition:persist="atmosphere" />
-    <TypingSFX client:only="svelte" transition:persist="typingsfx" />
+    <CyberBot client:idle transition:persist="cyberbot" />
+    <PagePeel client:idle transition:persist="pagepeel" />
+    <Terminal client:idle transition:persist="terminal" />
+    <CursorTrail client:idle transition:persist="cursortrail" />
+    <AtmosphereLoop client:idle transition:persist="atmosphere" />
+    <TypingSFX client:idle transition:persist="typingsfx" />
   </div>
   <script>
     // Konami code → matrix chaos

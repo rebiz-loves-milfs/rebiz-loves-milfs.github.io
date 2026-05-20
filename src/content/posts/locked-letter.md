@@ -2,7 +2,7 @@
 title: "A Letter to Future Me"
 titleTinted: "Unlock Day"
 published: 2026-05-20
-unlockAt: 2026-06-01T14:30:00.000Z
+unlockAt: 2026-05-21T08:17:08.000Z
 description: "A time-locked letter that opens on June 1st. Some things are worth waiting for."
 tags: [personal, thoughts, time-lock]
 category: Personal

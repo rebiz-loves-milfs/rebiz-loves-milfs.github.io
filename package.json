@@ -5,13 +5,27 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "lint": "eslint src",
+    "format": "prettier --write src",
+    "typecheck": "astro check"
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.0.0",
     "@astrojs/svelte": "^7.0.0",
     "astro": "^5.0.0",
+    "astro-compress": "^2.0.0",
     "crypto-js": "^4.2.0",
     "sharp": "^0.34.0",
     "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-svelte": "^2.0.0",
+    "prettier": "^3.0.0",
+    "prettier-plugin-astro": "^0.14.0",
+    "prettier-plugin-svelte": "^3.0.0",
+    "vitest": "^2.0.0"
   }
 }

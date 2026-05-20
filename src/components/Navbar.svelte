@@ -1,18 +1,13 @@
 <script>
   import { onMount } from 'svelte';
-  import { dark, hue } from '../stores/theme';
+  import { theme } from '../stores/theme.svelte';
   import { NAV_LINKS, SITE, AUTHOR } from '../config';
 
-  let huePop = false;
-  let mobileOpen = false;
-  let mediaOpen = false;
-  let mobileMediaOpen = false;
-  let currentHue = 30;
-  let isDark = false;
-  let currentPath = '/';
-
-  const unsub1 = hue.subscribe(v => (currentHue = v));
-  const unsub2 = dark.subscribe(v => (isDark = v));
+  let huePop = $state(false);
+  let mobileOpen = $state(false);
+  let mediaOpen = $state(false);
+  let mobileMediaOpen = $state(false);
+  let currentPath = $state('/');
 
   onMount(() => {
     currentPath = window.location.pathname;
@@ -23,35 +18,26 @@
     }
     document.addEventListener('click', onBodyClick);
     return () => {
-      unsub1();
-      unsub2();
       document.removeEventListener('click', onBodyClick);
     };
   });
 
-  $: isActive = (path) => {
+  function isActive(path) {
     if (path === '/') return currentPath === '/' || currentPath.startsWith('/posts');
     return currentPath.startsWith(path);
-  };
+  }
 
-  $: isDropdownActive = (children) => children.some(c => currentPath.startsWith(c.path));
+  function isDropdownActive(children) {
+    return children.some(c => currentPath.startsWith(c.path));
+  }
 
   function switchTheme() {
-    if (document.startViewTransition) {
-      document.startViewTransition(() => dark.update(d => !d));
-    } else {
-      dark.update(d => !d);
-    }
+    theme.dark = !theme.dark;
   }
 
   function openSearch() {
     mobileOpen = false;
     window.dispatchEvent(new CustomEvent('open-search'));
-  }
-
-  function navTo(path) {
-    mobileOpen = false;
-    window.location.href = path;
   }
 </script>
 
@@ -69,7 +55,7 @@
             class="nav-link nav-dropdown-btn {isDropdownActive(link.children) ? 'active' : ''}"
             aria-expanded={mediaOpen}
             aria-haspopup="true"
-            on:click|stopPropagation={() => (mediaOpen = !mediaOpen)}
+            onclick={(e) => { e.stopPropagation(); mediaOpen = !mediaOpen; }}
           >
             <iconify-icon icon={link.icon} width="16" aria-hidden="true"></iconify-icon>
             {link.label}
@@ -87,7 +73,7 @@
                   href={child.path}
                   class="nav-dropdown-item {isActive(child.path) ? 'active' : ''}"
                   role="menuitem"
-                  on:click={() => (mediaOpen = false)}
+                  onclick={() => (mediaOpen = false)}
                 >
                   <iconify-icon icon={child.icon} width="14" aria-hidden="true"></iconify-icon>
                   {child.label}
@@ -110,16 +96,16 @@
   </div>
 
   <div class="nav-tools" style="position:relative">
-    <button class="icon-btn" title="Search (⌘K)" aria-label="Open search" on:click={openSearch}>
+    <button class="icon-btn" title="Search (⌘K)" aria-label="Open search" onclick={openSearch}>
       <iconify-icon icon="material-symbols:search" aria-hidden="true"></iconify-icon>
     </button>
-    <button class="icon-btn" title="Toggle theme" aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'} on:click={switchTheme}>
-      <iconify-icon icon={isDark ? 'material-symbols:light-mode' : 'material-symbols:dark-mode'} aria-hidden="true"></iconify-icon>
+    <button class="icon-btn" title="Toggle theme" aria-label={theme.dark ? 'Switch to light mode' : 'Switch to dark mode'} onclick={switchTheme}>
+      <iconify-icon icon={theme.dark ? 'material-symbols:light-mode' : 'material-symbols:dark-mode'} aria-hidden="true"></iconify-icon>
     </button>
-    <button class="icon-btn" title="Pick accent hue" aria-label="Pick accent hue" aria-expanded={huePop} on:click|stopPropagation={() => (huePop = !huePop)}>
+    <button class="icon-btn" title="Pick accent hue" aria-label="Pick accent hue" aria-expanded={huePop} onclick={(e) => { e.stopPropagation(); huePop = !huePop; }}>
       <iconify-icon icon="material-symbols:palette-outline" aria-hidden="true"></iconify-icon>
     </button>
-    <button class="icon-btn nav-hamburger" title="Menu" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} on:click={() => (mobileOpen = !mobileOpen)}>
+    <button class="icon-btn nav-hamburger" title="Menu" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} onclick={() => (mobileOpen = !mobileOpen)}>
       <iconify-icon icon={mobileOpen ? 'material-symbols:close' : 'material-symbols:menu'} aria-hidden="true"></iconify-icon>
     </button>
 
@@ -131,10 +117,10 @@
           class="hue-slider"
           type="range"
           min="0" max="360"
-          value={currentHue}
-          on:input={e => hue.set(Number(e.target.value))}
+          value={theme.hue}
+          oninput={e => (theme.hue = Number(e.target.value))}
         />
-        <div class="val">--hue: {currentHue}</div>
+        <div class="val">--hue: {theme.hue}</div>
       </div>
     {/if}
   </div>
@@ -146,7 +132,7 @@
       {#if link.children}
         <button
           class="mobile-nav-link {isDropdownActive(link.children) ? 'active' : ''}"
-          on:click={() => (mobileMediaOpen = !mobileMediaOpen)}
+          onclick={() => (mobileMediaOpen = !mobileMediaOpen)}
         >
           <iconify-icon icon={link.icon} width="18" aria-hidden="true"></iconify-icon>
           {link.label}
@@ -160,23 +146,24 @@
         </button>
         {#if mobileMediaOpen}
           {#each link.children as child}
-            <button
+            <a
+              href={child.path}
               class="mobile-nav-link mobile-nav-child {isActive(child.path) ? 'active' : ''}"
-              on:click={() => navTo(child.path)}
+              onclick={() => (mobileOpen = false)}
             >
               <iconify-icon icon={child.icon} width="16" aria-hidden="true"></iconify-icon>
               {child.label}
-            </button>
+            </a>
           {/each}
         {/if}
       {:else}
-        <button class="mobile-nav-link {isActive(link.path) ? 'active' : ''}" on:click={() => navTo(link.path)}>
+        <a href={link.path} class="mobile-nav-link {isActive(link.path) ? 'active' : ''}" onclick={() => (mobileOpen = false)}>
           <iconify-icon icon={link.icon} width="18" aria-hidden="true"></iconify-icon>
           {link.label}
-        </button>
+        </a>
       {/if}
     {/each}
-    <button class="mobile-nav-link" on:click={openSearch}>
+    <button class="mobile-nav-link" onclick={openSearch}>
       <iconify-icon icon="material-symbols:search" width="18" aria-hidden="true"></iconify-icon>
       Search
     </button>

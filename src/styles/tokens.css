@@ -23,6 +23,9 @@
 @keyframes vt-fade-in  { from { opacity: 0; transform: translateY(4px); } }
 @keyframes vt-fade-out { to   { opacity: 0; transform: translateY(-4px); } }
 
+::view-transition {
+  background-color: var(--page-bg, oklch(0.95 0.01 30));
+}
 ::view-transition-old(root) {
   animation: 90ms ease-out both vt-fade-out;
 }

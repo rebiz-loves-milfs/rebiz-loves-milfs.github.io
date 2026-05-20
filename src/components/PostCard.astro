@@ -1,0 +1,75 @@
+---
+import { formatDate, formatDateTime, slugify } from '../utils/content-utils';
+
+interface Props {
+  post: any;
+  index: number;
+  currentPage: number;
+}
+
+const { post, index, currentPage } = Astro.props;
+const PAGE_SIZE = 8;
+const num = String((currentPage - 1) * PAGE_SIZE + index + (currentPage === 1 ? 2 : 1)).padStart(2, '0');
+---
+
+<article class={`pcard${post.data.encrypted ? ' pcard-locked' : ''}`} style={`animation-delay:${index * 40}ms`}>
+
+  <div class="pcard-index" aria-hidden="true">
+    <span class="pcard-num">{num}</span>
+    <time class="pcard-date" datetime={post.data.published.toISOString()}>
+      {formatDate(post.data.published)}
+    </time>
+  </div>
+
+  <div class="pcard-body">
+    <div class="pcard-eyebrow">
+      {post.data.encrypted && (
+        <span class="pcard-badge-lock">
+          <iconify-icon icon="material-symbols:lock-outline" width="9"></iconify-icon>
+          LOCKED
+        </span>
+      )}
+      {post.data.unlockAt && new Date() < post.data.unlockAt && (
+        <span class="pcard-badge-lock pcard-badge-time">
+          <iconify-icon icon="material-symbols:lock-clock" width="9"></iconify-icon>
+          UNLOCKS {formatDateTime(post.data.unlockAt)}
+        </span>
+      )}
+      {post.data.category && (
+        <a href={`/category/${slugify(post.data.category)}`} class="pcard-cat" data-astro-prefetch>
+          <iconify-icon icon="material-symbols:bookmark-outline" width="10"></iconify-icon>
+          {post.data.category}
+        </a>
+      )}
+      {post.data.series && <span class="pcard-series">{post.data.series}</span>}
+      {post.data.readTime && <span class="pcard-read">{post.data.readTime}</span>}
+    </div>
+    <h3 class="pcard-title">
+      <a href={`/posts/${post.id}`} data-astro-prefetch>
+        {post.data.title}
+        {post.data.titleTinted && <span class="pcard-tint"> {post.data.titleTinted}</span>}
+      </a>
+    </h3>
+    <p class="pcard-desc">{post.data.description}</p>
+    {post.data.tags.length > 0 && (
+      <div class="pcard-tags">
+        {post.data.tags.slice(0, 3).map((tag: string) => (
+          <a href={`/tag/${slugify(tag)}`} class="pcard-tag" data-astro-prefetch>#{tag}</a>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <a href={`/posts/${post.id}`} class="pcard-media" tabindex="-1" aria-hidden="true" data-astro-prefetch>
+    {post.data.image
+      ? <div class="pcard-photo">
+          <img src={post.data.image} alt={post.data.title} loading="lazy" width="130" height="130" />
+          <div class="pcard-photo-veil"></div>
+          <iconify-icon icon="material-symbols:chevron-right-rounded" width="28" class="pcard-photo-chevron"></iconify-icon>
+        </div>
+      : <div class="pcard-enter">
+          <iconify-icon icon="material-symbols:chevron-right-rounded" width="22" class="pcard-chevron"></iconify-icon>
+        </div>
+    }
+  </a>
+</article>

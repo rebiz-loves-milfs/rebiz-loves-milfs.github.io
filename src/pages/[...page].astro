@@ -1,0 +1,192 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Layout from '../layouts/Layout.astro';
+import Banner from '../components/Banner.svelte';
+import Pagination from '../components/Pagination.astro';
+import PostCard from '../components/PostCard.astro';
+import Profile from '../components/widget/Profile.astro';
+import Announcement from '../components/widget/Announcement.astro';
+import SiteStats from '../components/widget/SiteStats.astro';
+import Categories from '../components/widget/Categories.astro';
+import Tags from '../components/widget/Tags.astro';
+import SeriesList from '../components/widget/SeriesList.astro';
+import LastFm from '../components/widget/LastFm.svelte';
+import Discord from '../components/widget/Discord.svelte';
+import Calendar from '../components/widget/Calendar.svelte';
+import ReadingList from '../components/widget/ReadingList.svelte';
+import { getSortedPosts, formatDate, formatDateTime, slugify } from '../utils/content-utils';
+import { SITE } from '../config';
+import '../styles/home.css';
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const allPosts = await getSortedPosts();
+  return paginate(allPosts, { pageSize: 8 });
+}) satisfies GetStaticPaths;
+
+const PAGE_SIZE = 8;
+
+const { page } = Astro.props;
+
+// All posts needed for sidebar widgets + calendar
+const allPosts = await getSortedPosts();
+
+// Featured hero only on page 1
+const featured = page.currentPage === 1 ? page.data[0] : null;
+const listPosts = page.currentPage === 1 ? page.data.slice(1) : page.data;
+
+// Category showcase (always derived from all posts, shown only on page 1)
+const catMap = new Map<string, { count: number; image: string; gradient: string; glyph: string }>();
+for (const p of allPosts) {
+  if (!p.data.category) continue;
+  const cat = p.data.category;
+  if (!catMap.has(cat)) {
+    catMap.set(cat, {
+      count: 0,
+      image: p.data.image ?? '',
+      gradient: p.data.gradient ?? '',
+      glyph: p.data.glyph ?? '✦',
+    });
+  }
+  catMap.get(cat)!.count++;
+}
+const showcaseCategories = [...catMap.entries()]
+  .sort((a, b) => b[1].count - a[1].count)
+  .slice(0, 4);
+---
+
+<Layout pathname={Astro.url.pathname}>
+  <Banner client:load title={SITE.title} />
+  <div class="grid three-col">
+    <aside class="sidebar">
+      <Profile />
+      <Announcement />
+      <SiteStats />
+      <Categories />
+      <Tags />
+      <SeriesList />
+      <ReadingList client:visible />
+    </aside>
+
+    <main>
+      <div class="post-feed" transition:name="post-feed">
+      <!-- ── Featured post (page 1 only) ──────────────────── -->
+      {featured && (
+        <article class={`post-featured${!featured.data.image ? ' post-featured-plain' : ''}${featured.data.encrypted || (featured.data.unlockAt && new Date() < featured.data.unlockAt) ? ' post-featured-locked' : ''}`}>
+          <a href={`/posts/${featured.id}`} class="post-card-link" aria-label={`Read: ${featured.data.title}`} data-astro-prefetch></a>
+          {featured.data.image && (
+            <div class="featured-bg" style={`background-image:url(${featured.data.image})`}></div>
+          )}
+          <div class="featured-overlay">
+            <div class="featured-top">
+              <span class="featured-badge">Latest</span>
+              {featured.data.series && <span class="series-badge">{featured.data.series}</span>}
+              {featured.data.encrypted && (
+                <span class="featured-badge-lock">
+                  <iconify-icon icon="material-symbols:lock-outline" width="10"></iconify-icon>
+                  LOCKED
+                </span>
+              )}
+              {featured.data.unlockAt && new Date() < featured.data.unlockAt && (
+                <span class="featured-badge-lock featured-badge-time">
+                  <iconify-icon icon="material-symbols:lock-clock" width="10"></iconify-icon>
+                  UNLOCKS {formatDateTime(featured.data.unlockAt)}
+                </span>
+              )}
+            </div>
+            <div class="featured-bottom">
+              <div class="featured-meta">
+                <span>{formatDate(featured.data.published)}</span>
+                {featured.data.category && <>
+                  <span class="meta-dot">·</span>
+                  <a href={`/category/${slugify(featured.data.category)}`} class="featured-cat">{featured.data.category}</a>
+                </>}
+                {featured.data.readTime && <>
+                  <span class="meta-dot">·</span>
+                  <span>{featured.data.readTime} read</span>
+                </>}
+              </div>
+              <h2 class="featured-title">
+                {featured.data.title}
+                {featured.data.titleTinted && <span class="featured-tinted"> {featured.data.titleTinted}</span>}
+              </h2>
+              {featured.data.description && <p class="featured-desc">{featured.data.description}</p>}
+            </div>
+          </div>
+        </article>
+      )}
+
+      <!-- ── Category showcase (page 1 only) ──────────────── -->
+      {page.currentPage === 1 && showcaseCategories.length > 0 && (
+        <section class="cat-showcase">
+          <div class="cat-showcase-header">
+            <span class="cat-showcase-label">Browse by category</span>
+          </div>
+          <div class="cat-showcase-grid">
+            {showcaseCategories.map(([name, { count, image, gradient, glyph }]) => (
+              <a href={`/category/${slugify(name)}`} class={`cat-card ${image ? 'cat-card-photo' : ''}`}>
+                {image && <img src={image} alt={name} class="cat-card-img" loading="lazy" />}
+                {!image && (
+                  <div class="cat-icon" style={gradient ? `background:${gradient}` : 'background:var(--primary-soft)'}>
+                    <span class="cat-icon-glyph">{glyph}</span>
+                  </div>
+                )}
+                <div class={`cat-info ${image ? 'cat-info-photo' : ''}`}>
+                  <span class="cat-name">{name}</span>
+                  <span class="cat-count">{count} {count === 1 ? 'post' : 'posts'}</span>
+                </div>
+                <iconify-icon icon="material-symbols:chevron-right-rounded" width="18" class={`cat-arrow ${image ? 'cat-arrow-photo' : ''}`}></iconify-icon>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- ── Post list ──────────────────────────────────── -->
+      <div class="post-list-header">
+        <span class="post-list-label">Latest posts</span>
+        <span class="post-list-count">{allPosts.length} posts · page {page.currentPage}/{page.lastPage}</span>
+      </div>
+
+      {listPosts.map((post, i) => (
+        <PostCard post={post} index={i} currentPage={page.currentPage} />
+      ))}
+
+      <Pagination page={page} />
+      </div>
+    </main>
+
+    <aside class="sidebar-right">
+      <LastFm client:visible />
+      <Discord client:visible />
+      <Calendar client:visible postDates={allPosts.map(p => ({
+        date: p.data.published.toISOString().slice(0, 10),
+        id: p.id,
+        title: p.data.title,
+      }))} />
+    </aside>
+  </div>
+</Layout>
+
+<script>
+  const getPageNum = (path: string): number | null => {
+    if (path === '/' || path === '') return 1;
+    const m = path.match(/^\/(\d+)\/?$/);
+    return m ? parseInt(m[1], 10) : null;
+  };
+
+  // Capture phase fires before Astro's router, so data-nav-dir is set
+  // before startViewTransition() is called — guaranteed to affect the animation.
+  document.addEventListener('click', (e) => {
+    const a = (e.target as Element).closest?.('a[href]') as HTMLAnchorElement | null;
+    if (!a?.href) return;
+    try {
+      const toPage = getPageNum(new URL(a.href).pathname);
+      const fromPage = getPageNum(window.location.pathname);
+      if (toPage !== null && fromPage !== null && toPage !== fromPage) {
+        document.documentElement.dataset.navDir = toPage > fromPage ? 'next' : 'prev';
+      } else {
+        delete document.documentElement.dataset.navDir;
+      }
+    } catch { /* ignore non-URL hrefs like # */ }
+  }, true); // true = capture phase
+</script>

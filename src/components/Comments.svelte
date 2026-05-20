@@ -1,18 +1,12 @@
 <script>
   import { onMount } from 'svelte';
-  import { dark } from '../stores/theme';
+  import * as theme from '../stores/theme.svelte';
 
-  export let repo = '';
-  export let repoId = '';
-  export let category = '';
-  export let categoryId = '';
-  export let term = 'pathname';
+  let { repo = '', repoId = '', category = '', categoryId = '', term = 'pathname' } = $props();
 
-  let container;
-  let isDark = false;
-  const unsub = dark.subscribe(v => (isDark = v));
+  let container = $state(null);
 
-  const configured = repo && repoId && category && categoryId;
+  const configured = $derived(repo && repoId && category && categoryId);
 
   onMount(() => {
     if (configured && container) {
@@ -27,23 +21,23 @@
       script.setAttribute('data-reactions-enabled', '1');
       script.setAttribute('data-emit-metadata', '0');
       script.setAttribute('data-input-position', 'top');
-      script.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      script.setAttribute('data-theme', theme.dark ? 'dark' : 'light');
       script.setAttribute('data-lang', 'en');
       script.setAttribute('data-loading', 'lazy');
       script.crossOrigin = 'anonymous';
       script.async = true;
       container.appendChild(script);
     }
-
-    return () => unsub();
   });
 
-  $: if (typeof window !== 'undefined') {
-    window.postMessage(
-      { giscus: { setConfig: { theme: isDark ? 'dark' : 'light' } } },
-      window.location.origin,
-    );
-  }
+  $effect(() => {
+    if (typeof window !== 'undefined') {
+      window.postMessage(
+        { giscus: { setConfig: { theme: theme.dark ? 'dark' : 'light' } } },
+        window.location.origin,
+      );
+    }
+  });
 </script>
 
 <div class="comments-section">
