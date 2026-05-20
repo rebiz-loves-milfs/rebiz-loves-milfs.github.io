@@ -62,6 +62,9 @@
 
     const draw = () => {
       if (!canvas) return;
+      // Sync canvas size to viewport on every frame in case resize() ran before bind
+      if (canvas.width !== window.innerWidth)  canvas.width  = window.innerWidth;
+      if (canvas.height !== window.innerHeight) canvas.height = window.innerHeight;
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 

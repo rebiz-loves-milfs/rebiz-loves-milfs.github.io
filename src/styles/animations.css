@@ -1,84 +1,410 @@
 /* ui_kits/mizuki-blog/animations.css — all @keyframes animations */
 
 /* View Transitions API for theme switch */
-::view-transition-old(root), ::view-transition-new(root) {
+::view-transition-old(root),
+::view-transition-new(root) {
   animation-duration: 0.45s;
-  animation-timing-function: cubic-bezier(.4,0,.2,1);
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Sidebar widget onload stagger */
 .sidebar > * {
-  animation: nx7-widget-in 180ms cubic-bezier(.4,0,.2,1) backwards;
+  animation: nx7-widget-in 180ms cubic-bezier(0.4, 0, 0.2, 1) backwards;
 }
-.sidebar > *:nth-child(1) { animation-delay:   0ms; }
-.sidebar > *:nth-child(2) { animation-delay:  25ms; }
-.sidebar > *:nth-child(3) { animation-delay:  50ms; }
-.sidebar > *:nth-child(4) { animation-delay:  75ms; }
-.sidebar > *:nth-child(5) { animation-delay: 100ms; }
-.sidebar > *:nth-child(6) { animation-delay: 125ms; }
-.sidebar > *:nth-child(7) { animation-delay: 150ms; }
-.sidebar > *:nth-child(8) { animation-delay: 175ms; }
+.sidebar > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.sidebar > *:nth-child(2) {
+  animation-delay: 25ms;
+}
+.sidebar > *:nth-child(3) {
+  animation-delay: 50ms;
+}
+.sidebar > *:nth-child(4) {
+  animation-delay: 75ms;
+}
+.sidebar > *:nth-child(5) {
+  animation-delay: 100ms;
+}
+.sidebar > *:nth-child(6) {
+  animation-delay: 125ms;
+}
+.sidebar > *:nth-child(7) {
+  animation-delay: 150ms;
+}
+.sidebar > *:nth-child(8) {
+  animation-delay: 175ms;
+}
 @keyframes nx7-widget-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Post-card stagger inside post list */
 .post-item {
-  animation: nx7-widget-in 200ms cubic-bezier(.4,0,.2,1) backwards;
+  animation: nx7-widget-in 200ms cubic-bezier(0.4, 0, 0.2, 1) backwards;
 }
-.post-item:nth-child(1) { animation-delay:  50ms; }
-.post-item:nth-child(2) { animation-delay:  90ms; }
-.post-item:nth-child(3) { animation-delay: 130ms; }
-.post-item:nth-child(4) { animation-delay: 170ms; }
-.post-item:nth-child(5) { animation-delay: 210ms; }
-.post-item:nth-child(6) { animation-delay: 250ms; }
+.post-item:nth-child(1) {
+  animation-delay: 50ms;
+}
+.post-item:nth-child(2) {
+  animation-delay: 90ms;
+}
+.post-item:nth-child(3) {
+  animation-delay: 130ms;
+}
+.post-item:nth-child(4) {
+  animation-delay: 170ms;
+}
+.post-item:nth-child(5) {
+  animation-delay: 210ms;
+}
+.post-item:nth-child(6) {
+  animation-delay: 250ms;
+}
 
 /* Anime tile stagger */
 .anime-tile {
-  animation: nx7-widget-in 280ms cubic-bezier(.4,0,.2,1) backwards;
+  animation: nx7-widget-in 280ms cubic-bezier(0.4, 0, 0.2, 1) backwards;
 }
-.anime-tile:nth-child(2) { animation-delay: 40ms; }
-.anime-tile:nth-child(3) { animation-delay: 80ms; }
-.anime-tile:nth-child(4) { animation-delay: 120ms; }
-.anime-tile:nth-child(5) { animation-delay: 160ms; }
-.anime-tile:nth-child(6) { animation-delay: 200ms; }
-.anime-tile:nth-child(7) { animation-delay: 240ms; }
-.anime-tile:nth-child(8) { animation-delay: 280ms; }
-.anime-tile:nth-child(9) { animation-delay: 320ms; }
-.anime-tile:nth-child(10) { animation-delay: 360ms; }
-.anime-tile:nth-child(11) { animation-delay: 400ms; }
-.anime-tile:nth-child(12) { animation-delay: 440ms; }
+.anime-tile:nth-child(2) {
+  animation-delay: 40ms;
+}
+.anime-tile:nth-child(3) {
+  animation-delay: 80ms;
+}
+.anime-tile:nth-child(4) {
+  animation-delay: 120ms;
+}
+.anime-tile:nth-child(5) {
+  animation-delay: 160ms;
+}
+.anime-tile:nth-child(6) {
+  animation-delay: 200ms;
+}
+.anime-tile:nth-child(7) {
+  animation-delay: 240ms;
+}
+.anime-tile:nth-child(8) {
+  animation-delay: 280ms;
+}
+.anime-tile:nth-child(9) {
+  animation-delay: 320ms;
+}
+.anime-tile:nth-child(10) {
+  animation-delay: 360ms;
+}
+.anime-tile:nth-child(11) {
+  animation-delay: 400ms;
+}
+.anime-tile:nth-child(12) {
+  animation-delay: 440ms;
+}
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .page-wrap, .sidebar > *, .post-item, .anime-tile, .nx7-sprite {
-    animation: none !important; transition: none !important;
+  .page-wrap,
+  .sidebar > *,
+  .post-item,
+  .anime-tile,
+  .nx7-sprite {
+    animation: none !important;
+    transition: none !important;
   }
 }
 
 /* AniList loading skeleton animations */
-.anime-cover.sk, .lfm-cover.sk, .sk, .sk-line {
-  background: linear-gradient(90deg, var(--btn-regular-bg) 0%, var(--btn-regular-bg-hover) 50%, var(--btn-regular-bg) 100%);
+.anime-cover.sk,
+.lfm-cover.sk,
+.sk,
+.sk-line {
+  background: linear-gradient(
+    90deg,
+    var(--btn-regular-bg) 0%,
+    var(--btn-regular-bg-hover) 50%,
+    var(--btn-regular-bg) 100%
+  );
   background-size: 200% 100%;
   animation: skim 1s ease-in-out infinite;
 }
-.sk-line { height: 13px; border-radius: 0.4rem; }
-@keyframes skim { 0% { background-position: -100% 0; } 100% { background-position: 100% 0; } }
+.sk-line {
+  height: 13px;
+  border-radius: 0.4rem;
+}
+@keyframes skim {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 100% 0;
+  }
+}
 @keyframes sk-reveal {
-  from { opacity: 0; transform: translateY(5px); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Watching indicator pulse */
 .watching-dot {
-  position: absolute; bottom: 8px; left: 8px;
-  width: 10px; height: 10px; border-radius: 999px;
-  background: oklch(0.65 0.18 145); border: 2px solid white;
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: oklch(0.65 0.18 145);
+  border: 2px solid white;
   box-shadow: 0 0 0 0 oklch(0.65 0.18 145 / 0.5);
   animation: pulseDot 1.8s ease-out infinite;
 }
 @keyframes pulseDot {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.65 0.18 145 / 0.5); }
-  50%      { box-shadow: 0 0 0 6px oklch(0.65 0.18 145 / 0); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 oklch(0.65 0.18 145 / 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 6px oklch(0.65 0.18 145 / 0);
+  }
+}
+
+/* ─── Scroll-reveal utilities (IntersectionObserver-driven) ────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 500ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition:
+    opacity 500ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-left.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Staggered delay variants for post-feed children */
+.post-feed .reveal:nth-child(1) {
+  transition-delay: 0ms;
+}
+.post-feed .reveal:nth-child(2) {
+  transition-delay: 80ms;
+}
+.post-feed .reveal:nth-child(3) {
+  transition-delay: 160ms;
+}
+.post-feed .reveal:nth-child(4) {
+  transition-delay: 240ms;
+}
+
+/* scroll-reveal observer added in Layout.astro client script */
+
+/* ─── Post-featured hero entrance ──────────────────────────────────────────── */
+.post-featured {
+  animation: featured-in 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes featured-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ─── CSS scroll-timeline progress indicator (progressive enhancement) ─────── */
+@supports (animation-timeline: scroll()) {
+  .scroll-indicator {
+    animation: scroll-grow linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0% 100%;
+    transform-origin: left;
+  }
+  @keyframes scroll-grow {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+}
+
+/* ─── Cat-card hover spring ─────────────────────────────────────────────────── */
+.cat-card {
+  transition:
+    transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 200ms ease;
+}
+.cat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ─── Reduced motion overrides for all new additions ───────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-left,
+  .post-featured {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1;
+    transform: none;
+  }
+  .cat-card:hover {
+    transform: none;
+  }
+}
+
+/* ─── Page grain texture ────────────────────────────────────────────────────── */
+.page-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  mix-blend-mode: overlay;
+}
+.dark .page-grain {
+  opacity: 0.045;
+  mix-blend-mode: screen;
+}
+
+/* ─── Staggered pcard entrance ─────────────────────────────────────────────── */
+.pcard:nth-child(1) {
+  animation-delay: 30ms;
+}
+.pcard:nth-child(2) {
+  animation-delay: 80ms;
+}
+.pcard:nth-child(3) {
+  animation-delay: 130ms;
+}
+.pcard:nth-child(4) {
+  animation-delay: 180ms;
+}
+.pcard:nth-child(5) {
+  animation-delay: 230ms;
+}
+.pcard:nth-child(6) {
+  animation-delay: 280ms;
+}
+.pcard:nth-child(7) {
+  animation-delay: 330ms;
+}
+.pcard:nth-child(8) {
+  animation-delay: 380ms;
+}
+
+/* ─── Sidebar widget stagger ────────────────────────────────────────────────── */
+.sidebar > *:nth-child(9) {
+  animation-delay: 200ms;
+}
+.sidebar > *:nth-child(10) {
+  animation-delay: 225ms;
+}
+
+/* ─── Card entrance (widgets) ───────────────────────────────────────────────── */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ─── Hue-pulse on primary accent elements ──────────────────────────────────── */
+@keyframes hue-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.15) saturate(1.2);
+  }
+}
+
+/* ─── Post-card photo zoom spring ───────────────────────────────────────────── */
+.pcard:hover .pcard-photo img {
+  transform: scale(1.07) !important;
+  transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* ─── Featured badge glow pulse ─────────────────────────────────────────────── */
+.featured-badge {
+  animation: badge-glow 3s ease-in-out infinite;
+}
+@keyframes badge-glow {
+  0%,
+  100% {
+    box-shadow: none;
+  }
+  50% {
+    box-shadow: 0 0 12px oklch(0.7 0.18 var(--hue) / 0.55);
+  }
+}
+
+/* ─── Reduced motion — grain and new additions ──────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .page-grain {
+    display: none;
+  }
+  .pcard {
+    animation: none !important;
+  }
+  .pcard::before {
+    display: none;
+  }
+  .featured-badge {
+    animation: none;
+    box-shadow: none;
+  }
+  .pcard-num {
+    transition: none;
+  }
+  .banner-title,
+  .banner-subtitle {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  .banner-img.active-slide {
+    animation: none;
+  }
+  .post-featured {
+    animation: none;
+    transition: none;
+    transform: none;
+  }
+  .post-featured:hover {
+    transform: none;
+  }
 }

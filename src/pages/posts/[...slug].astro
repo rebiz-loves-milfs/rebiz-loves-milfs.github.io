@@ -51,7 +51,7 @@ const jsonLd = {
       <Discord client:visible />
     </aside>
     <main>
-      <article class="post-body">
+      <article class="post-body" style="animation: post-body-in 500ms cubic-bezier(0.16,1,0.3,1) both;">
 
         <!-- Hero -->
         {image
@@ -190,23 +190,40 @@ const jsonLd = {
   /* Hero */
   .post-hero {
     width: 100%; border-radius: var(--radius-large);
-    margin-bottom: 24px; overflow: hidden;
+    margin-bottom: 28px; overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
   }
   .post-hero-img { aspect-ratio: 16 / 6; }
-  .post-hero-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .post-hero-img img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform 600ms cubic-bezier(0.16,1,0.3,1);
+  }
+  .post-hero-img:hover img { transform: scale(1.02); }
   .post-hero-gradient {
-    height: 200px; position: relative;
+    height: 220px; position: relative;
     display: flex; align-items: center; justify-content: center;
   }
   .post-glyph {
-    font-size: 80px; opacity: 0.65;
-    filter: drop-shadow(0 4px 16px rgba(0,0,0,0.15));
+    font-size: 96px; opacity: 0.6;
+    filter: drop-shadow(0 4px 24px rgba(0,0,0,0.2));
     position: relative; z-index: 1;
+    animation: glyph-float 6s ease-in-out infinite;
+  }
+  @keyframes glyph-float {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50%       { transform: translateY(-8px) rotate(2deg); }
   }
   .post-hero-shimmer {
     position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+    background: linear-gradient(135deg,
+      rgba(255,255,255,0.12) 0%,
+      transparent 50%,
+      oklch(0.70 0.10 var(--hue) / 0.05) 100%);
     pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .post-glyph { animation: none; }
+    .post-hero-img:hover img { transform: none; }
   }
 
   /* Meta bar */
@@ -240,57 +257,157 @@ const jsonLd = {
   /* Title */
   .post-title {
     font-family: var(--font-display); font-weight: 700;
-    font-size: clamp(28px, 4vw, 44px);
-    line-height: 1.15; color: var(--fg-1);
-    margin: 0 0 12px; letter-spacing: -0.01em;
+    font-size: clamp(30px, 4.5vw, 52px);
+    line-height: 1.1; color: var(--fg-1);
+    margin: 0 0 16px; letter-spacing: -0.025em;
   }
   .post-title .tinted { color: var(--primary); }
 
   /* Tags */
   .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
   .tag-pill {
-    font-size: 12px; padding: 3px 10px; border-radius: 999px;
+    font-size: 12px; padding: 4px 12px; border-radius: 999px;
     background: var(--primary-soft); color: var(--primary);
     font-family: var(--font-display); text-decoration: none;
-    transition: background 120ms, transform 120ms;
+    border: 1px solid transparent;
+    transition: background 200ms, transform 200ms cubic-bezier(0.34,1.56,0.64,1), border-color 200ms;
   }
-  .tag-pill:hover { background: var(--btn-regular-bg-hover); transform: translateY(-1px); }
+  .tag-pill:hover {
+    background: var(--btn-regular-bg-hover);
+    border-color: oklch(0.70 0.14 var(--hue) / 0.3);
+    transform: translateY(-2px);
+  }
 
   /* Divider */
   .post-divider {
-    height: 1px; background: var(--border);
-    margin: 24px 0; border-radius: 1px;
-    background: linear-gradient(to right, var(--primary-soft), var(--border), transparent);
+    height: 1px; margin: 28px 0; border-radius: 1px;
+    background: linear-gradient(to right, var(--primary), var(--primary-soft), transparent);
+    opacity: 0.5;
   }
 
   /* Content prose overrides */
   .post-content :global(h2) { scroll-margin-top: 110px; }
   .post-content :global(h3) { scroll-margin-top: 110px; }
-  .post-content :global(p) { line-height: 1.8; }
+  .post-content :global(p) { font-size: 16.5px; line-height: 1.9; }
+  .post-content :global(img) {
+    border-radius: var(--radius-large);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    max-width: 100%;
+  }
+  .post-content :global(ul), .post-content :global(ol) {
+    padding-left: 1.5em; line-height: 1.85;
+    font-size: 16px; color: var(--fg-2);
+  }
+  .post-content :global(li) { margin-bottom: 6px; }
+  .post-content :global(hr) {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin: 32px 0;
+  }
 
   /* Share / copy actions */
   .post-actions {
-    display: flex; gap: 8px; flex-wrap: wrap;
-    margin-top: 40px; padding-top: 24px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-top: 48px; padding-top: 28px;
     border-top: 1px solid var(--border);
   }
   .post-action-btn {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 8px 16px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 18px; border-radius: 999px;
     font-size: 13px; font-family: var(--font-display); font-weight: 600;
     background: var(--btn-regular-bg); color: var(--btn-content);
     border: 1px solid var(--border); cursor: pointer;
-    text-decoration: none; transition: background 120ms, transform 100ms;
+    text-decoration: none;
+    transition: background 200ms, transform 200ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 200ms;
   }
-  .post-action-btn:hover { background: var(--btn-regular-bg-hover); transform: translateY(-1px); }
-  .post-action-twitter { background: var(--primary-soft); color: var(--primary); border-color: transparent; }
-  .post-action-twitter:hover { background: var(--btn-regular-bg-hover); }
+  .post-action-btn:hover {
+    background: var(--btn-regular-bg-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  }
+  .post-action-twitter {
+    background: var(--primary-soft); color: var(--primary);
+    border-color: oklch(0.70 0.14 var(--hue) / 0.2);
+  }
+  .post-action-twitter:hover {
+    background: var(--primary);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 16px oklch(0.70 0.14 var(--hue) / 0.35);
+  }
+
+  /* Article entrance */
+  @keyframes post-body-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    article.post-body { animation: none; }
+    .tag-pill:hover { transform: none; }
+  }
 
   /* Footer */
-  .post-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .post-footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); }
   .btn-back {
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 13px; color: var(--fg-2); text-decoration: none; transition: color 0.2s;
   }
   .btn-back:hover { color: var(--primary); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .copy-code-btn { transition: none; }
+  }
 </style>
+
+<script>
+  function initCopyCodeButtons() {
+    const pres = document.querySelectorAll('.post-content pre');
+    pres.forEach((pre) => {
+      // Idempotency check — skip if already wrapped
+      if (pre.parentElement && pre.parentElement.classList.contains('code-block-wrap')) return;
+
+      // Wrap the pre in a relative container
+      const wrap = document.createElement('div');
+      wrap.className = 'code-block-wrap';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+
+      // Build button
+      const btn = document.createElement('button');
+      btn.className = 'copy-code-btn';
+      btn.setAttribute('aria-label', 'Copy code');
+      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy`;
+      wrap.appendChild(btn);
+
+      btn.addEventListener('click', async () => {
+        const text = pre.textContent ?? '';
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          // Fallback for browsers without clipboard API
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          try { document.execCommand('copy'); } catch {}
+          document.body.removeChild(ta);
+        }
+        btn.textContent = '✓ Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy`;
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    });
+  }
+
+  // Initial load
+  initCopyCodeButtons();
+
+  // View Transitions compatibility
+  document.addEventListener('astro:page-load', initCopyCodeButtons);
+</script>

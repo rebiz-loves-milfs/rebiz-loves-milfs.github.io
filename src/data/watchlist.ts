@@ -1,5 +1,10 @@
-export type WatchStatus = 'watching' | 'completed' | 'plan' | 'dropped' | 'hold';
-export type WatchType   = 'movie' | 'tv';
+export type WatchStatus =
+  | "watching"
+  | "completed"
+  | "plan"
+  | "dropped"
+  | "hold";
+export type WatchType = "movie" | "tv";
 
 export interface WatchEntry {
   id: number;
@@ -27,9 +32,9 @@ export interface WatchEntry {
 }
 
 /** Poster helper — accepts TMDB path ("/abc.jpg") or a full URL */
-export function posterUrl(path?: string, size = 'w342'): string {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
+export function posterUrl(path?: string, size = "w342"): string {
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
   return `https://image.tmdb.org/t/p/${size}${path}`;
 }
 
@@ -38,26 +43,26 @@ const FALLBACK_WATCHLIST: WatchEntry[] = [
   // ── Currently watching ──────────────────────────────
   {
     id: 1,
-    title: 'Severance',
+    title: "Severance",
     year: 2022,
-    poster: '/qKS4BYtb6TcFvbNBLJPi2OQ9WnF.jpg',
-    type: 'tv',
-    status: 'watching',
+    poster: "/qKS4BYtb6TcFvbNBLJPi2OQ9WnF.jpg",
+    type: "tv",
+    status: "watching",
     score: 9,
     episodesWatched: 10,
     episodesTotal: 18,
     seasons: 2,
-    note: 'Lumon Industries is wild.',
+    note: "Lumon Industries is wild.",
   },
 
   // ── Completed — Movies ───────────────────────────────
   {
     id: 3,
-    title: 'Parasite',
+    title: "Parasite",
     year: 2019,
-    poster: '/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg',
-    type: 'movie',
-    status: 'completed',
+    poster: "/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
+    type: "movie",
+    status: "completed",
     score: 10,
     hue: 145,
   },
@@ -65,11 +70,11 @@ const FALLBACK_WATCHLIST: WatchEntry[] = [
   // ── Completed — TV ───────────────────────────────────
   {
     id: 7,
-    title: 'Succession',
+    title: "Succession",
     year: 2018,
-    poster: '/e2X8g6OsM8vCWCEP3r5kYcAEKFm.jpg',
-    type: 'tv',
-    status: 'completed',
+    poster: "/e2X8g6OsM8vCWCEP3r5kYcAEKFm.jpg",
+    type: "tv",
+    status: "completed",
     score: 9,
     episodesWatched: 39,
     episodesTotal: 39,
@@ -77,11 +82,11 @@ const FALLBACK_WATCHLIST: WatchEntry[] = [
   },
   {
     id: 8,
-    title: 'The Bear',
+    title: "The Bear",
     year: 2022,
-    poster: '/sHFlbKS3WLqMnp9t2ghADIJFnuQ.jpg',
-    type: 'tv',
-    status: 'completed',
+    poster: "/sHFlbKS3WLqMnp9t2ghADIJFnuQ.jpg",
+    type: "tv",
+    status: "completed",
     score: 9,
     episodesWatched: 28,
     episodesTotal: 28,
@@ -91,40 +96,49 @@ const FALLBACK_WATCHLIST: WatchEntry[] = [
   // ── Plan to watch ────────────────────────────────────
   {
     id: 9,
-    title: 'Dune: Part Two',
+    title: "Dune: Part Two",
     year: 2024,
-    poster: '/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',
-    type: 'movie',
-    status: 'plan',
+    poster: "/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+    type: "movie",
+    status: "plan",
     hue: 85,
   },
   {
     id: 10,
-    title: 'Shogun',
+    title: "Shogun",
     year: 2024,
-    poster: '/7O4iVfOMQmdCSxhOg1WnzG1AgYT.jpg',
-    type: 'tv',
-    status: 'plan',
+    poster: "/7O4iVfOMQmdCSxhOg1WnzG1AgYT.jpg",
+    type: "tv",
+    status: "plan",
     hue: 30,
     episodesTotal: 10,
   },
 ];
 
-function simklHeaders(accessToken: string, clientId: string): Record<string, string> {
-  const h: Record<string, string> = { 'simkl-api-key': clientId };
-  if (accessToken) h['Authorization'] = `Bearer ${accessToken}`;
+function simklHeaders(
+  accessToken: string,
+  clientId: string,
+): Record<string, string> {
+  const h: Record<string, string> = { "simkl-api-key": clientId };
+  if (accessToken) h["Authorization"] = `Bearer ${accessToken}`;
   return h;
 }
 
 function simklPosterUrl(poster?: string): string | undefined {
   if (!poster) return undefined;
-  if (poster.startsWith('http')) return poster;
+  if (poster.startsWith("http")) return poster;
   // Simkl poster paths: "img/posters/{hash}" → full URL
   return `https://simkl.in/posters/${poster}_m.jpg`;
 }
 
-async function simklFetch(url: string, accessToken: string, clientId: string): Promise<any[]> {
-  const res = await fetch(url, { headers: simklHeaders(accessToken, clientId) });
+async function simklFetch(
+  url: string,
+  accessToken: string,
+  clientId: string,
+): Promise<any[]> {
+  const res = await fetch(url, {
+    headers: simklHeaders(accessToken, clientId),
+  });
   if (!res.ok) throw new Error(`Simkl ${res.status}: ${url}`);
   const data = await res.json();
   return Array.isArray(data) ? data : [];
@@ -140,21 +154,29 @@ export async function fetchWatchlistFromSimkl(
   accessToken: string,
 ): Promise<WatchEntry[]> {
   if (!accessToken) {
-    console.warn('[Simkl] No access token — using fallback. Run scripts/simkl-auth.mjs.');
+    console.warn(
+      "[Simkl] No access token — using fallback. Run scripts/simkl-auth.mjs.",
+    );
     return FALLBACK_WATCHLIST;
   }
 
   try {
     const base = `https://api.simkl.com/users/${simklUser}`;
-    const [completed_movies, completed_tv, watching_movies, watching_tv, plan_movies, plan_tv] =
-      await Promise.all([
-        simklFetch(`${base}/movies/completed`, accessToken, clientId),
-        simklFetch(`${base}/tv/completed`, accessToken, clientId),
-        simklFetch(`${base}/movies/watching`, accessToken, clientId),
-        simklFetch(`${base}/tv/watching`, accessToken, clientId),
-        simklFetch(`${base}/movies/plantowatch`, accessToken, clientId),
-        simklFetch(`${base}/tv/plantowatch`, accessToken, clientId),
-      ]);
+    const [
+      completed_movies,
+      completed_tv,
+      watching_movies,
+      watching_tv,
+      plan_movies,
+      plan_tv,
+    ] = await Promise.all([
+      simklFetch(`${base}/movies/completed`, accessToken, clientId),
+      simklFetch(`${base}/tv/completed`, accessToken, clientId),
+      simklFetch(`${base}/movies/watching`, accessToken, clientId),
+      simklFetch(`${base}/tv/watching`, accessToken, clientId),
+      simklFetch(`${base}/movies/plantowatch`, accessToken, clientId),
+      simklFetch(`${base}/tv/plantowatch`, accessToken, clientId),
+    ]);
 
     const entries: WatchEntry[] = [];
 
@@ -165,8 +187,8 @@ export async function fetchWatchlistFromSimkl(
         title: e.movie.title,
         year: e.movie.year,
         poster: simklPosterUrl(e.movie.poster),
-        type: 'movie',
-        status: 'watching',
+        type: "movie",
+        status: "watching",
         score: e.user_rating || undefined,
       });
     }
@@ -178,8 +200,8 @@ export async function fetchWatchlistFromSimkl(
         title: e.show.title,
         year: e.show.year,
         poster: simklPosterUrl(e.show.poster),
-        type: 'tv',
-        status: 'watching',
+        type: "tv",
+        status: "watching",
         score: e.user_rating || undefined,
         episodesWatched: e.watched_episodes_count,
         episodesTotal: e.total_episodes_count,
@@ -194,8 +216,8 @@ export async function fetchWatchlistFromSimkl(
         title: e.movie.title,
         year: e.movie.year,
         poster: simklPosterUrl(e.movie.poster),
-        type: 'movie',
-        status: 'completed',
+        type: "movie",
+        status: "completed",
         score: e.user_rating || undefined,
       });
     }
@@ -207,8 +229,8 @@ export async function fetchWatchlistFromSimkl(
         title: e.show.title,
         year: e.show.year,
         poster: simklPosterUrl(e.show.poster),
-        type: 'tv',
-        status: 'completed',
+        type: "tv",
+        status: "completed",
         score: e.user_rating || undefined,
         episodesWatched: e.watched_episodes_count,
         episodesTotal: e.total_episodes_count,
@@ -223,8 +245,8 @@ export async function fetchWatchlistFromSimkl(
         title: e.movie.title,
         year: e.movie.year,
         poster: simklPosterUrl(e.movie.poster),
-        type: 'movie',
-        status: 'plan',
+        type: "movie",
+        status: "plan",
       });
     }
 
@@ -235,21 +257,21 @@ export async function fetchWatchlistFromSimkl(
         title: e.show.title,
         year: e.show.year,
         poster: simklPosterUrl(e.show.poster),
-        type: 'tv',
-        status: 'plan',
+        type: "tv",
+        status: "plan",
         episodesTotal: e.total_episodes_count,
         seasons: e.seasons?.length,
       });
     }
 
     if (entries.length === 0) {
-      console.warn('[Simkl] API returned empty lists — using fallback.');
+      console.warn("[Simkl] API returned empty lists — using fallback.");
       return FALLBACK_WATCHLIST;
     }
 
     return entries;
   } catch (err) {
-    console.warn('[Simkl] Fetch failed, using fallback:', err);
+    console.warn("[Simkl] Fetch failed, using fallback:", err);
     return FALLBACK_WATCHLIST;
   }
 }

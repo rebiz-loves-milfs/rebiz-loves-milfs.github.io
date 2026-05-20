@@ -32,7 +32,7 @@ My partner asked what I was doing. I said "typography research." She left the ro
 
 ## Zen Maru Gothic
 
-I ended up with [Zen Maru Gothic](https://fonts.google.com/specimen/Zen+Maru+Gothic) — a Japanese rounded gothic that has this quality I can only describe as *deliberate softness*. The terminals are rounded without being bubble-letter. The CJK glyphs are absolutely beautiful. It pairs surprisingly well with JetBrains Mono for code.
+I ended up with [Zen Maru Gothic](https://fonts.google.com/specimen/Zen+Maru+Gothic) — a Japanese rounded gothic that has this quality I can only describe as _deliberate softness_. The terminals are rounded without being bubble-letter. The CJK glyphs are absolutely beautiful. It pairs surprisingly well with JetBrains Mono for code.
 
 The catch: it only has one weight. You get Medium and that's it.
 

@@ -61,7 +61,7 @@
   border-radius: 50%;
 }
 
-.dark .fog-layer {
+:global(.dark) .fog-layer {
   background: radial-gradient(
     ellipse 80% 60% at 50% 50%,
     oklch(0.22 0.018 var(--hue) / 0.60),
@@ -95,7 +95,7 @@
   );
 }
 
-.dark .fog-vignette {
+:global(.dark) .fog-vignette {
   background: radial-gradient(
     ellipse 100% 80% at 50% 100%,
     oklch(0.12 0.02 var(--hue) / 0.4) 0%,

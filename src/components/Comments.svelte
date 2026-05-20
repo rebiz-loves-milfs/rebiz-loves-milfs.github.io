@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import * as theme from '../stores/theme.svelte';
+  import { theme } from '../stores/theme.svelte';
 
   let { repo = '', repoId = '', category = '', categoryId = '', term = 'pathname' } = $props();
 

@@ -11,6 +11,7 @@
     "typecheck": "astro check"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.9",
     "@astrojs/sitemap": "^3.0.0",
     "@astrojs/svelte": "^7.0.0",
     "astro": "^5.0.0",
@@ -23,9 +24,11 @@
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",
     "eslint-plugin-svelte": "^2.0.0",
+    "javascript-obfuscator": "^5.4.2",
     "prettier": "^3.0.0",
     "prettier-plugin-astro": "^0.14.0",
     "prettier-plugin-svelte": "^3.0.0",
+    "vite-plugin-javascript-obfuscator": "^3.1.0",
     "vitest": "^2.0.0"
   }
 }

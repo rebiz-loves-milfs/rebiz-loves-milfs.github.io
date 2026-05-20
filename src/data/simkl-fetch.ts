@@ -2,7 +2,7 @@
  * Fetch SIMKL stats and media lists at build time
  */
 
-import { SIMKL } from '../config';
+import { SIMKL } from "../config";
 
 export interface SimklStats {
   total_mins: number;
@@ -33,13 +33,13 @@ export interface SimklStats {
 export async function fetchSimklStats(): Promise<SimklStats | null> {
   try {
     const res = await fetch(
-      `https://api.simkl.com/users/${SIMKL.user}/stats?client_id=${SIMKL.clientId}`
+      `https://api.simkl.com/users/${SIMKL.user}/stats?client_id=${SIMKL.clientId}`,
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return data;
   } catch (err) {
-    console.error('Failed to fetch SIMKL stats:', err);
+    console.error("Failed to fetch SIMKL stats:", err);
     return null;
   }
 }
@@ -48,12 +48,17 @@ export async function fetchSimklStats(): Promise<SimklStats | null> {
  * Fetch list from SIMKL (movies or tv) - build-time
  */
 export async function fetchSimklList(
-  type: 'movies' | 'tv',
-  status: 'completed' | 'watching' | 'plantowatch' | 'dropped' | 'hold' = 'completed'
+  type: "movies" | "tv",
+  status:
+    | "completed"
+    | "watching"
+    | "plantowatch"
+    | "dropped"
+    | "hold" = "completed",
 ): Promise<any[]> {
   try {
     const res = await fetch(
-      `https://api.simkl.com/users/${SIMKL.user}/${type}/${status}?client_id=${SIMKL.clientId}`
+      `https://api.simkl.com/users/${SIMKL.user}/${type}/${status}?client_id=${SIMKL.clientId}`,
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
@@ -69,8 +74,8 @@ export async function fetchSimklList(
  */
 export async function fetchSimklWatchlist() {
   const [movies, tv] = await Promise.all([
-    fetchSimklList('movies', 'completed'),
-    fetchSimklList('tv', 'completed'),
+    fetchSimklList("movies", "completed"),
+    fetchSimklList("tv", "completed"),
   ]);
 
   return {

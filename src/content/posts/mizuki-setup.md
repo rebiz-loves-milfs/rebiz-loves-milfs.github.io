@@ -26,8 +26,8 @@ Edit `src/config.ts` first. Set your name, bio, Last.fm username, Discord user I
 
 ```typescript
 export const siteConfig = {
-  title: 'Your Blog',
-  author: 'Your Name',
+  title: "Your Blog",
+  author: "Your Name",
 };
 ```
 

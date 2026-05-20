@@ -255,7 +255,7 @@
       {@const p = pct(a.ep, a.total)}
       {@const sc = a.score ? (a.score/10*5).toFixed(1) : null}
       <a href={aniUrl(a.id)} target="_blank" rel="noopener noreferrer"
-         class="al-poster-wrap" style="--i:{i}; --sc:{STATUS_COLOR[a.status]}">
+         class="al-poster-wrap" style="--i:{i}; --sc:{STATUS_COLOR[a.status]}" data-cursor-card>
         <div class="al-poster"
           style={a.cover
             ? `background-image:url(${a.cover})`

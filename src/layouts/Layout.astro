@@ -16,9 +16,11 @@ import CyberBot from '../components/CyberBot.svelte';
 import SearchModal from '../components/SearchModal.svelte';
 import PagePeel from '../components/PagePeel.svelte';
 import Terminal from '../components/Terminal.svelte';
-import CursorTrail from '../components/CursorTrail.svelte';
+import CursorLock from '../components/CursorLock.svelte';
 import AtmosphereLoop from '../components/AtmosphereLoop.svelte';
 import TypingSFX from '../components/TypingSFX.svelte';
+import BackToTop from '../components/BackToTop.svelte';
+import Newsletter from '../components/Newsletter.astro';
 import { SITE, THEME, AUTHOR } from '../config';
 import { getSortedPosts } from '../utils/content-utils';
 
@@ -59,6 +61,7 @@ const searchPosts = allPosts
   <link rel="icon" href="/assets/favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon.ico" />
   <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+  <link rel="alternate" type="application/rss+xml" title={`${SITE.title} RSS Feed`} href="/rss.xml" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
@@ -103,7 +106,7 @@ const searchPosts = allPosts
   <script defer src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
   <script define:vars={{ defaultHue: THEME.defaultHue }}>
     function applyTheme(el) {
-      const d = localStorage.getItem('dark') === 'true';
+      const d = (localStorage.getItem('dark') ?? 'true') === 'true';
       const h = parseInt(localStorage.getItem('hue') ?? defaultHue, 10) || defaultHue;
       el.classList.toggle('dark', d);
       el.style.setProperty('--hue', String(h));
@@ -117,6 +120,8 @@ const searchPosts = allPosts
   </script>
 </head>
 <body>
+  <!-- Grain texture overlay — atmospheric depth -->
+  <div class="page-grain" aria-hidden="true"></div>
   <div class="shell">
     <PageProgress client:load transition:persist />
     <Sakura />
@@ -125,14 +130,16 @@ const searchPosts = allPosts
     <div class="page-wrap">
       <slot />
     </div>
+    <Newsletter />
     <Footer />
     <MusicPlayer client:load />
     <CyberBot client:only="svelte" />
     <PagePeel client:only="svelte" />
     <Terminal client:idle />
-    <CursorTrail client:idle />
+    <CursorLock client:idle />
     <AtmosphereLoop client:idle />
     <TypingSFX client:idle />
+    <BackToTop client:idle />
   </div>
   <script>
     // Konami code → matrix chaos
@@ -163,6 +170,148 @@ const searchPosts = allPosts
         }
       });
     }
+  </script>
+  <script>
+    // Scroll-reveal IntersectionObserver — powers .reveal and .reveal-left classes
+    function initScrollReveal() {
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add('is-visible');
+              io.unobserve(e.target);
+            }
+          });
+        },
+        { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+      );
+      document.querySelectorAll('.reveal, .reveal-left').forEach((el) => {
+        if (!el.classList.contains('is-visible')) io.observe(el);
+      });
+    }
+    initScrollReveal();
+    document.addEventListener('astro:page-load', initScrollReveal);
+  </script>
+  <script>
+    // ── DRM & Content Protection ──────────────────────────────────────────────
+    (function () {
+      'use strict';
+
+      // ── 1. Right-click & keyboard shortcuts ──────────────────────────────
+      document.addEventListener('contextmenu', (e) => e.preventDefault(), true);
+      document.addEventListener('keydown', (e) => {
+        const k = e.key.toLowerCase();
+        if ((e.ctrlKey || e.metaKey) && ['s','u','p','a','c','x'].includes(k)) { e.preventDefault(); return; }
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && ['i','j','c','k'].includes(k)) { e.preventDefault(); return; }
+        if (e.key === 'F12') { e.preventDefault(); return; }
+      }, true);
+
+      // ── 2. Drag protection on all media ──────────────────────────────────
+      document.addEventListener('dragstart', (e) => {
+        if (e.target instanceof HTMLImageElement || e.target instanceof HTMLVideoElement) e.preventDefault();
+      }, true);
+
+      // ── 3. Copy / cut event suppression ──────────────────────────────────
+      document.addEventListener('copy', (e) => { e.clipboardData?.setData('text/plain', ''); e.preventDefault(); }, true);
+      document.addEventListener('cut',  (e) => { e.clipboardData?.setData('text/plain', ''); e.preventDefault(); }, true);
+
+      // ── 4. Print intercept ───────────────────────────────────────────────
+      window.addEventListener('beforeprint', (e) => { e.stopImmediatePropagation(); }, true);
+
+      // ── 5. Canvas watermark (visible in screenshots) ─────────────────────
+      function paintWatermark() {
+        let canvas = document.getElementById('drm-watermark') as HTMLCanvasElement | null;
+        if (!canvas) {
+          canvas = document.createElement('canvas');
+          canvas.id = 'drm-watermark';
+          document.body.appendChild(canvas);
+        }
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Diagonal tiled stamp — low alpha so it's nearly invisible on-screen
+        // but baked into pixel-capture / screenshot
+        const stamp = `© ${new Date().getFullYear()} — Unauthorized copy`;
+        ctx.save();
+        ctx.font = 'bold 13px monospace';
+        ctx.fillStyle = 'rgba(120,120,120,0.18)';
+        ctx.rotate(-Math.PI / 6);
+        const step = 220;
+        for (let y = -canvas.height; y < canvas.height * 2; y += step) {
+          for (let x = -canvas.width; x < canvas.width * 2; x += step) {
+            ctx.fillText(stamp, x, y);
+          }
+        }
+        ctx.restore();
+      }
+      paintWatermark();
+      window.addEventListener('resize', paintWatermark);
+      document.addEventListener('astro:page-load', paintWatermark);
+
+      // ── 6. Screenshot-trip overlay ───────────────────────────────────────
+      // When tab loses visibility (common screen-record tool behaviour),
+      // flash a hard white cover to break the capture frame.
+      let coverEl: HTMLDivElement | null = null;
+      function getCover() {
+        if (!coverEl) {
+          coverEl = document.createElement('div');
+          coverEl.style.cssText =
+            'position:fixed;inset:0;background:#fff;z-index:2147483647;display:none;pointer-events:none;';
+          document.body.appendChild(coverEl);
+        }
+        return coverEl;
+      }
+      document.addEventListener('visibilitychange', () => {
+        const cover = getCover();
+        if (document.visibilityState === 'hidden') {
+          cover.style.display = 'block';
+        } else {
+          // Brief flash then remove — disrupts screen-recording tools that
+          // capture on focus-return
+          setTimeout(() => { cover.style.display = 'none'; }, 80);
+        }
+      });
+
+      // ── 7. DevTools size-change detector (basic) ─────────────────────────
+      // Fires when the window shrinks suddenly, which is a heuristic for
+      // docked devtools opening.
+      let prevW = window.outerWidth, prevH = window.outerHeight;
+      setInterval(() => {
+        const dw = window.outerWidth  - window.innerWidth;
+        const dh = window.outerHeight - window.innerHeight;
+        if (dw > 160 || dh > 160) {
+          // Blur all text content as a deterrent
+          document.body.style.filter = 'blur(8px)';
+        } else {
+          document.body.style.filter = '';
+        }
+        prevW = window.outerWidth;
+        prevH = window.outerHeight;
+      }, 1000);
+    })();
+  </script>
+  <script>
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      const tag = (e.target as HTMLElement).tagName;
+      const isEditable = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).hasAttribute('contenteditable');
+
+      if (e.key === 'Escape') {
+        window.dispatchEvent(new CustomEvent('close-search'));
+        return;
+      }
+
+      if (isEditable) return;
+
+      if (e.key === '/') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('open-search'));
+      } else if (e.key === 't' || e.key === 'T') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
   </script>
 </body>
 </html>

@@ -1,8 +1,8 @@
 export interface ReadingItem {
   title: string;
   author: string;
-  type: 'book' | 'article' | 'manga' | 'light-novel';
-  status: 'reading' | 'finished' | 'want-to-read';
+  type: "book" | "article" | "manga" | "light-novel";
+  status: "reading" | "finished" | "want-to-read";
   url?: string;
   cover?: string;
   rating?: number; // 1-5

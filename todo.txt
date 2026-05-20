@@ -1,1 +1,5 @@
 when i type in search bar and query is too long a horizontal scrool bar appears but it is not cohhernet with design of site looks basic html fix it
+make home page banner scale to top not below the navbar
+the copy button css or styling is fucked up it should be inside the codeblock in top right yk got it?
+and there are 2 cursors on scrren.. and i dont like current cursor maybe something more gothic anime?y
+and there are certain glowing particle effects but only limited to what seems like a rectangle in top left corner

@@ -25,7 +25,7 @@ interface Post {
 
 ## Inline elements
 
-Inline `code`, **bold**, *italic*, and ~~strikethrough~~ all work as expected.
+Inline `code`, **bold**, _italic_, and ~~strikethrough~~ all work as expected.
 
 ## Closing
 

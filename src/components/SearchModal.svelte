@@ -146,11 +146,13 @@
     display: flex; align-items: center; gap: 10px;
     padding: 14px 16px;
     border-bottom: 1px solid var(--border);
+    overflow: hidden;
   }
   .search-icon { color: var(--fg-3); flex-shrink: 0; }
   .search-input {
-    flex: 1; border: 0; outline: 0; background: transparent;
+    flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
     font-family: var(--font-display); font-size: 16px; color: var(--fg-1);
+    overflow: hidden; text-overflow: ellipsis;
   }
   .search-input::placeholder { color: var(--fg-4); }
   .search-clear {

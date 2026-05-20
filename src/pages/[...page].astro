@@ -13,7 +13,6 @@ import SeriesList from '../components/widget/SeriesList.astro';
 import LastFm from '../components/widget/LastFm.svelte';
 import Discord from '../components/widget/Discord.svelte';
 import Calendar from '../components/widget/Calendar.svelte';
-import ReadingList from '../components/widget/ReadingList.svelte';
 import { getSortedPosts, formatDate, formatDateTime, slugify } from '../utils/content-utils';
 import { SITE } from '../config';
 import '../styles/home.css';
@@ -64,7 +63,6 @@ const showcaseCategories = [...catMap.entries()]
       <Categories />
       <Tags />
       <SeriesList />
-      <ReadingList client:visible />
     </aside>
 
     <main>
@@ -123,7 +121,7 @@ const showcaseCategories = [...catMap.entries()]
           </div>
           <div class="cat-showcase-grid">
             {showcaseCategories.map(([name, { count, image, gradient, glyph }]) => (
-              <a href={`/category/${slugify(name)}`} class={`cat-card ${image ? 'cat-card-photo' : ''}`}>
+              <a href={`/category/${slugify(name)}`} class={`cat-card ${image ? 'cat-card-photo' : ''}`} data-cursor-card>
                 {image && <img src={image} alt={name} class="cat-card-img" loading="lazy" />}
                 {!image && (
                   <div class="cat-icon" style={gradient ? `background:${gradient}` : 'background:var(--primary-soft)'}>

@@ -18,7 +18,7 @@ The oklch color space is perceptually uniform — which means changing lightness
 ```css
 :root {
   --hue: 30;
-  --primary: oklch(0.70 0.14 var(--hue));
+  --primary: oklch(0.7 0.14 var(--hue));
 }
 ```
 

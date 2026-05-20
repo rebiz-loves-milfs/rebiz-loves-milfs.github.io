@@ -61,7 +61,7 @@
   {#each BANNERS as banner, i}
     <img
       src={banner.src}
-      class="banner-img"
+      class="banner-img {i === imgIdx ? 'active-slide' : ''}"
       style="opacity:{i === imgIdx ? 1 : 0}"
       alt={banner.alt}
       loading={i === 0 ? 'eager' : 'lazy'}
